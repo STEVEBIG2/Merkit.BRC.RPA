@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Merkit.BRC.RPA
+namespace Merkit.RPA.PA.Framework
 {
     public class Class1
     {
