@@ -11,40 +11,36 @@ namespace Merkit.BRC.RPA
     /// <summary>
     /// BRC_Enterhungary input excel ellenőrzése
     /// </summary>
-    public class ExcelValidator
+    public static class ExcelValidator
     {
-        public string TextFilePath { get; set; }
+        public static string TextFilePath { get; set; }
 
-        public ExcelValidator()
-        {
-
-        }
-
-        public ExcelValidator(string textFilePath)
-        {
-            this.TextFilePath = textFilePath;
-        }
-
-        string állampolgárság_dropdown = "";
-        string átvételi_ország_dropdown = "";
-        string benyújtó_dropdown = "";
-        string családi_állapot_dropdown = "";
-        string egészségbiztosítás_dropdown = "";
+        public static Dictionary<string, string> loadDropdownDict = new Dictionary<string, string>();
 
         /// <summary>
-        /// Az oldalon lévő , a flowhoz szükséges dropdown elemek értékeit  betölti a  lementett  txt fájlokból változókba
+        /// Az oldalon lévő , a flowhoz szükséges dropdown elemek értékeit  betölti a  lementett txt fájlokból
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public bool LoadDropdownValues(string path)
+        public static bool LoadDropdownValues(string path)
         {
+            loadDropdownDict.Clear();
 
-            // 22 ?
-            állampolgárság_dropdown = FileManager.ReadTextFile(Path.Combine(path, "állampolgárság.txt"));
-            átvételi_ország_dropdown = FileManager.ReadTextFile(Path.Combine(path, "átvételi ország.txt"));
-            benyújtó_dropdown = FileManager.ReadTextFile(Path.Combine(path, "benyújtó.txt"));
-            családi_állapot_dropdown = FileManager.ReadTextFile(Path.Combine(path, "családi állapot.txt"));
-            egészségbiztosítás_dropdown = FileManager.ReadTextFile(Path.Combine(path, "egészségbiztosítás.txt"));
+            string[] dropdownType = {
+                "állampolgárság", "átvételi ország", "benyújtó", "családi állapot", "egészségbiztosítás",
+                "előző ország", "FEOR", "iskolai végzettség", "munkakör iskolai végzettség", "munkáltató közterület jellege",
+                "nem", "nemzetiség", "nyelv", "pénznem", "szállás emelet",
+                "szállás közterület jellege", "szállás tartózkodási jogcíme", "szül_ország", "TEÁOR", "továbbut ország",
+                "útlevél tipus", "zipcode"
+            };
+
+            foreach (string type in dropdownType)
+            {
+                loadDropdownDict.Add(
+                    String.Format("{0}_dropdown", type.Replace(" ", "_")),
+                    FileManager.ReadTextFile(Path.Combine(path, type + ".txt"))
+                    );
+            }
 
             return true;
         }    

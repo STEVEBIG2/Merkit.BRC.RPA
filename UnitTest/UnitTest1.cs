@@ -13,6 +13,17 @@ namespace UnitTestProject1
     [TestClass]
     public class UnitTest1
     {
+        private const string PasswordName = "UiPath: Enter Hungary";
+        private const string UserName = "istvan.nagy@merkit.hu";
+        private const string Password = "Qw52267660";
+
+        [TestMethod]
+        public void TestLoadDropdownValues()
+        {
+            bool isOk = ExcelValidator.LoadDropdownValues("C:\\Merkit\\BRC_EnterHungary\\Textfiles");
+            Assert.IsTrue(isOk);
+        }
+
         [TestMethod]
         public void TestExcelManager()
         {
@@ -46,6 +57,29 @@ namespace UnitTestProject1
             string path = Path.Combine("C:\\Munka", "Log_{0}.txt");
             FileManager.Logger(0, 0, path, "Init", "Info", "TestLogger", "Teszt bejegyzés", "1234");
             FileManager.Logger(0, 0, path, "Init", "Info", "TestLogger", "Teszt bejegyzés 2", "1235");
+            Assert.IsTrue(true);
+        }
+
+        [TestMethod]
+        public void TestSaveWindowsCredential()
+        {
+            PasswordRepository.SaveWindowsCredential(PasswordName, UserName, Password);
+            Assert.IsTrue(true);
+        }
+
+        [TestMethod]
+        public void TestGetWindowsCredential()
+        {
+            string userName = null;
+            string password = null; 
+            bool isPassword = PasswordRepository.GetWindowsCredential(PasswordName, ref userName, ref password);
+            Assert.AreEqual(userName, UserName, password, Password);
+        }
+
+        [TestMethod]
+        public void TestDeleteWindowsCredential()
+        {
+            PasswordRepository.DeleteWindowsCredential(PasswordName);
             Assert.IsTrue(true);
         }
     }
