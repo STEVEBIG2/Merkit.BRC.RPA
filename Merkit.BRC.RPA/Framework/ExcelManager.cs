@@ -125,9 +125,19 @@ namespace Merkit.RPA.PA.Framework
             return;
         }
 
-        public static DataTable WorksheetToDataTable(Excel.Worksheet oSheet)
+        public static void InsertFirstColumn(string value)
         {
-            int totalRows = oSheet.UsedRange.Rows.Count;
+            Range rng;
+            rng = ExcelSheet.get_Range("A1");
+            rng.EntireColumn.Insert(XlInsertShiftDirection.xlShiftToRight, XlInsertFormatOrigin.xlFormatFromRightOrBelow);
+            rng = ExcelSheet.get_Range("A1");
+            rng.Value = value;
+            return;
+        }
+
+        public static DataTable WorksheetToDataTable(Excel.Worksheet oSheet, bool onlyHeader = false)
+        {
+            int totalRows = onlyHeader ? 1 : oSheet.UsedRange.Rows.Count;
             int totalCols = oSheet.UsedRange.Columns.Count;
             DataTable dt = new DataTable(oSheet.Name);
             DataRow dr = null;

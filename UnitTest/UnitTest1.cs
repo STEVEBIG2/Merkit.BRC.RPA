@@ -7,6 +7,7 @@ using System.Data;
 using DataTable = System.Data.DataTable;
 using System.Drawing;
 using Microsoft.Office.Interop.Excel;
+using System.Collections.Generic;
 
 namespace UnitTestProject1
 {
@@ -27,12 +28,112 @@ namespace UnitTestProject1
         [TestMethod]
         public void TestExcelManager()
         {
+            List<string> fejlecek = new List<string>() {
+                "Munkavállaló: Azonosító",
+                "Személy: Születési vezetéknév",
+                "Személy: Születési keresztnév",
+                "Személy: Útlevél száma/Személy ig.",
+                "Munkavállaló: Munkakör megnevezése",
+                "Munkavállaló: FEOR",
+                "Személy: Vezetéknév",
+                "Személy: Keresztnév",
+                "Személy: Születési ország",
+                "Személy: Születési hely",
+                "Személy: Születési dátum",
+                "Személy: Anyja vezetékneve",
+                "Személy: Anyja keresztneve",
+                "Személy: Neme",
+                "Személy: Igazolványkép",
+                "Személy: Állampolgárság",
+                "Személy: Családi állapot",
+                "Személy: Útlevél",
+                "Személy: Magyarországra érkezést megelőző foglalkozás",
+                "Személy: Útlevél kiállításának helye",
+                "Személy: Útlevél kiállításának dátuma",
+                "Személy: Útlevél lejáratának dátuma",
+                "Személy: Várható jövedelem",
+                "Személy: Várható jövedelem pénznem",
+                "Személy: Tartózkodási engedély érvényessége",
+                "Díjmentes-e","Engedély hosszabbítás-e",
+                "Útlevél típusa","Iskolai végzettsége",
+                "Munkavállaló: Irányítószám",
+                "Munkavállaló: Település",
+                "Munkavállaló: Közterület neve",
+                "Munkavállaló: Közterület jellege",
+                "Munkavállaló: Házszám",
+                "Munkavállaló: HRSZ",
+                "Munkavállaló: Épület",
+                "Munkavállaló: Lépcsőház",
+                "Munkavállaló: Emelet",
+                "Munkavállaló: Ajtó",
+                "Tartózkodás jogcíme",
+                "Egészségbiztosítás",
+                "Visszautazási ország",
+                "Visszautazáskor közlekedési eszköz",
+                "Visszautazás - útlevél van-e",
+                "Érkezést megelőző ország",
+                "Érkezést megelőző település",
+                "Schengeni tartkózkodási okmány van-e",
+                "Elutasított tartózkodási kérelem",
+                "Büntetett előélet",
+                "Kiutasították-e korábban",
+                "Szenved-e gyógykezelésre szoruló betegségekben",
+                "Kiskorú gyermek vele utazik-e",
+                "Okmány átvétele",
+                "Postai kézbesítés címe:",
+                "Email cím",
+                "Telefonszám",
+                "Benyújtó",
+                "Okmány átvétel külképviseleten?",
+                "Átvételi ország",
+                "Átvételi település",
+                "Munkáltató rövid cégnév",
+                "Munkáltató irányítószám",
+                "Munkáltató település",
+                "Munkáltató közterület neve",
+                "Munkáltató közterület jellege",
+                "Munkáltató házszám/hrsz",
+                "TEÁOR szám",
+                "KSH-szám",
+                "Munkáltató adószáma/adóazonosító jele",
+                "A foglalkoztatás munkaerő-kölcsönzés keretében történik",
+                "Munkakörhöz szükséges iskolai végzettség",
+                "Szakképzettsége",
+                "Munkavégzés helye",
+                "Munkavégzési irányítószám",
+                "Munkavégzési település",
+                "Munkavégzési közterület neve",
+                "Munkavégzési közterület jellege",
+                "Munkavégzési házszám/hrsz",
+                "Munkavégzési Épület",
+                "Munkavégzési Lépcsőház",
+                "Munkavégzési Emelet",
+                "Munkavégzési ajtó",
+                "Foglalkoztatóval kötött megállapodás kelte",
+                "Anyanyelve",
+                "Magyar nyelvismeret",
+                "Dolgozott-e korábban Magarországon?",
+                "Feldolgozottsági Állapot",
+                "Ügyszám",
+                "Ellenőrzés Státusz",
+                "Fájl Feltöltés Státusz" };
+
             //ExcelManager excelManager = new ExcelManager();
             bool isOk = ExcelManager.OpenExcel(@"c:\Munka\x.xlsx");
             //ExcelManager.SetRangeValues("C5", "C10", new object[] { 1, 2, 3, 4, 5, 6 });
-            var x = ExcelManager.ReadCellValue("C5");
-            ExcelManager.SetRangeColor("C5", "C10", Color.Red);
-            DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
+            //var x = ExcelManager.ReadCellValue("C5");
+            //ExcelManager.SetRangeColor("C5", "C10", Color.Red);
+            //ExcelManager.InsertFirstColumn("Kukukcs");
+            DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet, true);
+
+            foreach (string fejlec in fejlecek)
+            {
+                if(! dt.Columns.Contains(fejlec))
+                {
+                    ExcelManager.InsertFirstColumn(fejlec);
+                    ExcelManager.SetCellColor("A1", System.Drawing.Color.LightCoral);
+                }
+            }
 
             if (isOk)
             {
@@ -71,7 +172,7 @@ namespace UnitTestProject1
         public void TestGetWindowsCredential()
         {
             string userName = null;
-            string password = null; 
+            string password = null;
             bool isPassword = PasswordRepository.GetWindowsCredential(PasswordName, ref userName, ref password);
             Assert.AreEqual(userName, UserName, password, Password);
         }
