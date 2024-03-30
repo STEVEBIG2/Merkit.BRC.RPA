@@ -6,6 +6,7 @@ using System.IO;
 using Merkit.RPA.PA.Framework;
 using System.Data;
 using System.Diagnostics.Eventing.Reader;
+using Microsoft.Office.Interop.Excel;
 
 namespace Merkit.BRC.RPA
 {
@@ -113,6 +114,8 @@ namespace Merkit.BRC.RPA
 
         #endregion
 
+        #region Public függvények
+
         /// <summary>
         /// Az oldalon lévő , a flowhoz szükséges dropdown elemek értékeit  betölti a  lementett txt fájlokból
         /// </summary>
@@ -150,7 +153,7 @@ namespace Merkit.BRC.RPA
         {
             bool isOk = ExcelManager.OpenExcel(excelFileName);
             bool isHeaderOk = true;
-            DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet, true);
+            System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet, true);
 
             foreach (string fejlec in fejlecek)
             {
@@ -170,5 +173,92 @@ namespace Merkit.BRC.RPA
             return isOk && isHeaderOk;
         }
 
+        /// <summary>
+        /// Excel Rows Validator
+        /// </summary>
+        /// <param name="excelFileName"></param>
+        /// <returns></returns>
+        public static bool ExcelRowsValidator(string excelFileName)
+        {
+            Dictionary<string, bool> oszlopok_dictionary = new Dictionary<string, bool>() {
+                {"Foglalkoztatóval kötött megállapodás kelte",true},
+                {"Személy: Tartózkodási engedély érvényessége",true},
+                {"Személy: Útlevél lejáratának dátuma",true},
+                {"Személy: Útlevél kiállításának dátuma",true},
+                {"Személy: Születési dátum",true},
+                {"Munkavállaló: Emelet",true},
+                {"Munkavégzési Emelet",true},
+                {"Munkavégzési közterület jellege",true},
+                {"Személy: Születési ország",true},
+                {"Személy: Neme",true},
+                {"Személy: Állampolgárság",true},
+                {"Személy: Családi állapot",true},
+                {"Iskolai végzettsége",true},
+                {"Útlevél típusa",true},
+                {"Munkavállaló: Irányítószám",true},
+                {"Munkavállaló: Közterület neve",true},
+                {"Tartózkodás jogcíme",true},
+                {"Egészségbiztosítás",true},
+                {"Visszautazási ország",true},
+                {"Érkezést megelőző ország",true},
+                {"Email cím",true},{"Benyújtó",true},
+                {"Átvételi ország",true},
+                {"Személy: Várható jövedelem",true},
+                {"Személy: Várható jövedelem pénznem",true},
+                {"Munkáltató irányítószám",true},
+                {"Munkáltató közterület jellege",true},
+                {"TEÁOR szám",true},
+                {"KSH-szám",true},
+                {"Munkáltató adószáma/adóazonosító jele",true},
+                {"Munkakörhöz szükséges iskolai végzettség",true},
+                {"Munkavégzési irányítószám",true},
+                {"Munkavállaló: FEOR",true},
+                {"Anyanyelve",true},
+                {"Munkavállaló: Házszám", true},
+                {"Munkavállaló: HRSZ",true}
+            };
+
+            bool isOk = ExcelManager.OpenExcel(excelFileName);
+            System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
+            Dictionary<string, string> dictExcelColumnNameToExcellCol = ExcelManager.GetExcelColumnNamesByDataTable(dt);
+
+            int rowNum = 1;
+
+            // összes sor 
+            foreach (DataRow currentRow in dt.Rows)
+            {
+                rowNum++;                
+
+                // nem kihagyandó tétel?
+                if(! ExcelManager.GetDataRowValue(currentRow, "Ellenőrzés Státusz").ToLower().Contains("pass"))
+                {
+                    CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                    // *** követ
+                }
+
+            }
+
+            return true;
+        }
+
+        #endregion
+
+        #region Private függvények (oszloponkénti ellenőrzések)
+
+        private static void CsaladiAllapot(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
+        {
+            // *** "Nőtlen/hajadon"
+            string colName = "Személy: Családi állapot";
+            string cellValue = ExcelManager.GetDataRowValue(currentRow, colName).ToLower();
+            string cellName = fieldList[colName] + rowNum.ToString();
+
+            if (cellValue.Equals("nőtlen") || cellValue.Equals("hajadon"))
+            {
+                ExcelManager.SetCellValue(cellName, "Nőtlen/hajadon");
+            }
+        }
+
+        #endregion
     }
 }

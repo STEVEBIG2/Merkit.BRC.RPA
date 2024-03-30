@@ -25,6 +25,20 @@ namespace UnitTestProject1
             Assert.IsTrue(isOk);
         }
 
+
+        [TestMethod]
+        public void TestExcelRowsValidator()
+        {
+            bool isOk = ExcelValidator.ExcelRowsValidator(@"c:\Munka\x-10.xlsx");
+
+            if (isOk)
+            {
+                ExcelManager.CloseExcel();
+            }
+
+            Assert.IsTrue(isOk);
+        }
+
         [TestMethod]
         public void TestExcelManager()
         {

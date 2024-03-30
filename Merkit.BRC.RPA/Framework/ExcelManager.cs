@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Xml.Linq;
 using DataTable = System.Data.DataTable;
 using Excel = Microsoft.Office.Interop.Excel;
+using System.Collections.Generic;
 
 namespace Merkit.RPA.PA.Framework
 {
@@ -153,6 +154,65 @@ namespace Merkit.RPA.PA.Framework
                 }
             }
             return dt;
+        }
+
+
+        /// <summary>
+        /// Get Excel Column Names By DataTable
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        public static Dictionary<string, string> GetExcelColumnNamesByDataTable(System.Data.DataTable dt)
+        {
+            Dictionary<string, string> dictExcelColumnNameToExcellCol = new Dictionary<string, string>();
+            int colNum=0;
+
+            foreach (DataColumn col in dt.Columns) 
+            {
+                colNum++;
+                dictExcelColumnNameToExcellCol.Add(col.ColumnName, GetExcelColumnNameByColumnNumber(colNum));
+            }
+
+            return dictExcelColumnNameToExcellCol;
+        }
+
+        /// <summary>
+        /// Get ExcelColumnName by columnNumber
+        /// </summary>
+        /// <param name="columnNumber"></param>
+        /// <returns></returns>
+        public static string GetExcelColumnNameByColumnNumber(int columnNumber)
+        {
+            int dividend = columnNumber;
+            string columnName = String.Empty;
+            int modulo;
+
+            while (dividend > 0)
+            {
+                modulo = (dividend - 1) % 26;
+                columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
+                dividend = (int)((dividend - modulo) / 26);
+            }
+
+            return columnName;
+        }
+
+        /// <summary>
+        /// Get DataRow Value
+        /// </summary>
+        /// <param name="currentRow"></param>
+        /// <param name="colName"></param>
+        /// <returns></returns>
+        public static string GetDataRowValue(DataRow currentRow, string colName)
+        {
+            string value = "";
+            
+            if(currentRow[colName] != null)
+            {
+                value = currentRow[colName].ToString(); 
+            }
+
+            return value;
         }
 
     }
