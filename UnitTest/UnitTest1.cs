@@ -134,6 +134,9 @@ namespace UnitTestProject1
 
             //ExcelManager excelManager = new ExcelManager();
             bool isOk = ExcelManager.OpenExcel(@"c:\Munka\x.xlsx");
+            isOk = ExcelManager.SelectWorksheetByName("Munka1");
+
+
             //ExcelManager.SetRangeValues("C5", "C10", new object[] { 1, 2, 3, 4, 5, 6 });
             //var x = ExcelManager.ReadCellValue("C5");
             //ExcelManager.SetRangeColor("C5", "C10", Color.Red);
@@ -145,7 +148,7 @@ namespace UnitTestProject1
                 if(! dt.Columns.Contains(fejlec))
                 {
                     ExcelManager.InsertFirstColumn(fejlec);
-                    ExcelManager.SetCellColor("A1", System.Drawing.Color.LightCoral);
+                    ExcelManager.SetCellColor(1,1, System.Drawing.Color.Green); // LightCoral
                 }
             }
 

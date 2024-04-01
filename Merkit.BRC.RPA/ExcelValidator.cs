@@ -218,24 +218,40 @@ namespace Merkit.BRC.RPA
                 {"Munkavállaló: HRSZ",true}
             };
 
+            List<string> datumHeaderek = new List<string>() {
+                "Személy: Születési dátum",
+                "Személy: Útlevél kiállításának dátuma",
+                "Személy: Útlevél lejáratának dátuma",
+                "Személy: Tartózkodási engedély érvényessége",
+                "Foglalkoztatóval kötött megállapodás kelte"
+            };
+
             bool isOk = ExcelManager.OpenExcel(excelFileName);
             System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
             Dictionary<string, string> dictExcelColumnNameToExcellCol = ExcelManager.GetExcelColumnNamesByDataTable(dt);
-
+            bool isRowOk = true;
             int rowNum = 1;
 
             // összes sor 
             foreach (DataRow currentRow in dt.Rows)
             {
+                isRowOk = true;
                 rowNum++;                
 
                 // nem kihagyandó tétel?
                 if(! ExcelManager.GetDataRowValue(currentRow, "Ellenőrzés Státusz").ToLower().Contains("pass"))
                 {
-                    CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                    // Nőtlen v. hajadon -> Nőtlen/hajadon
+                    isRowOk = isRowOk && CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                    // *** Dátum Átalakítás És Ellenőrzés
+                    isRowOk = isRowOk && AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol, ref datumHeaderek);
+
 
                     // *** követ
                 }
+
+
 
             }
 
@@ -246,7 +262,13 @@ namespace Merkit.BRC.RPA
 
         #region Private függvények (oszloponkénti ellenőrzések)
 
-        private static void CsaladiAllapot(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
+        /// <summary>
+        /// CsaladiAllapot
+        /// </summary>
+        /// <param name="currentRow"></param>
+        /// <param name="rowNum"></param>
+        /// <param name="fieldList"></param>
+        private static bool CsaladiAllapot(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
         {
             // *** "Nőtlen/hajadon"
             string colName = "Személy: Családi állapot";
@@ -257,6 +279,33 @@ namespace Merkit.BRC.RPA
             {
                 ExcelManager.SetCellValue(cellName, "Nőtlen/hajadon");
             }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Check And Convert All Date Fields
+        /// </summary>
+        /// <param name="currentRow"></param>
+        /// <param name="rowNum"></param>
+        /// <param name="fieldList"></param>
+        /// <param name="datumHeaderek"></param>
+        private static bool AllDateCheckAndConvert(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList, ref List<string> datumHeaderek)
+        {
+            foreach (string colName in datumHeaderek)
+            {
+                string cellValue = ExcelManager.GetDataRowValue(currentRow, colName).ToLower();
+                string cellName = fieldList[colName] + rowNum.ToString();
+
+                if(cellValue.Length>0)
+                {
+                    DateTime dateTime = DateTime.MinValue;
+                    bool isGoodDate = DateTime.TryParse(cellValue, out dateTime);
+                }
+
+            }
+
+            return true;
         }
 
         #endregion

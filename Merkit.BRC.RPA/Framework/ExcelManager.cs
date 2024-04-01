@@ -17,6 +17,12 @@ namespace Merkit.RPA.PA.Framework
         public static Excel.Workbook ExcelWorkbook = null;
         public static Excel.Worksheet ExcelSheet = null;
 
+        /// <summary>
+        /// Open Excel file
+        /// </summary>
+        /// <param name="excelFilename"></param>
+        /// <param name="visible"></param>
+        /// <returns></returns>
         public static bool OpenExcel(string excelFilename, bool visible=true)
         {
             bool retValue = false;
@@ -45,6 +51,32 @@ namespace Merkit.RPA.PA.Framework
 
         }
 
+        /// <summary>
+        /// Select Worksheet By Name
+        /// </summary>
+        /// <param name="worksheetName"></param>
+        /// <returns></returns>
+        public static bool SelectWorksheetByName(string worksheetName)
+        {
+            bool retValue = true;
+
+            try
+            {
+                 ExcelSheet = ExcelWorkbook.Sheets[worksheetName];
+                 ExcelSheet.Activate();
+            }
+            catch
+            {
+                retValue = false;
+            }
+
+            return retValue;
+
+        }
+
+        /// <summary>
+        /// Close Excel File
+        /// </summary>
         public static void CloseExcel()
         {
 
@@ -74,29 +106,50 @@ namespace Merkit.RPA.PA.Framework
 
         }
 
+        /// <summary>
+        /// Set Cel lValue by cell name
+        /// </summary>
+        /// <param name="cell"></param>
+        /// <param name="value"></param>
         public static void SetCellValue(string cell, object value)
         {
-            Range rng;
-            rng = ExcelSheet.get_Range(cell);
-            rng.Value = value;
+            ExcelSheet.get_Range(cell).Value = value;
             return;
         }
 
+        /// <summary>
+        /// Set Cell Value by row and col
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="col"></param>
+        /// <returns></returns>
+        public static void SetCellValue(int row, int col, object value)
+        {
+            ExcelSheet.Cells[row, col].Value = value;
+            return;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cellStart"></param>
+        /// <param name="cellEnd"></param>
+        /// <param name="value"></param>
         public static void SetRangeValues(string cellStart, string cellEnd, object[] value)
         {
-            Range rng;
-            rng = ExcelSheet.get_Range(cellStart, cellEnd);
-            rng.Value = value; // mindenhova az első értéket írja
+            ExcelSheet.get_Range(cellStart, cellEnd).Value = value; // mindenhova az első értéket írja
             return;
         }
 
+        /// <summary>
+        /// Read Cell Value by cell name
+        /// </summary>
+        /// <param name="cell"></param>
+        /// <returns></returns>
         public static object ReadCellValue(string cell)
         {
-            Range rng;
-            rng = ExcelSheet.get_Range(cell);
-
+            Range rng = ExcelSheet.get_Range(cell);
             return rng.Value;
-
 
             // if (cell.Value2 == null)
             // cell is blank
@@ -108,54 +161,104 @@ namespace Merkit.RPA.PA.Framework
             // cell is date
         }
 
+        /// <summary>
+        /// Read Cell Value by row and col
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="col"></param>
+        /// <returns></returns>
+        public static string ReadCellValue(int row, int col)
+        {
+            string value = ExcelSheet.Cells[row, col].Value?.ToString();
+            return value;
+        }
+
+        /// <summary>
+        /// Set Cell Color by cell name
+        /// </summary>
+        /// <param name="cell"></param>
+        /// <param name="colorValue"></param>
         public static void SetCellColor(string cell, Color colorValue)
         {
-
-            Range rng;
-            rng = ExcelSheet.get_Range(cell);
-            rng.Interior.Color = System.Drawing.ColorTranslator.ToOle(colorValue);
+            ExcelSheet.get_Range(cell).Interior.Color = System.Drawing.ColorTranslator.ToOle(colorValue);
             return;
         }
 
+
+        /// <summary>
+        /// Set Cell Color by row and col
+        /// </summary>
+        /// <param name="cell"></param>
+        /// <param name="colorValue"></param>
+        public static void SetCellColor(int row, int col, Color colorValue)
+        {
+            ExcelSheet.Cells[row, col].Interior.Color = System.Drawing.ColorTranslator.ToOle(colorValue);
+            return;
+        }
+
+        /// <summary>
+        /// Set Range Color
+        /// </summary>
+        /// <param name="cellStart"></param>
+        /// <param name="cellEnd"></param>
+        /// <param name="colorValue"></param>
         public static void SetRangeColor(string cellStart, string cellEnd, Color colorValue)
         {
-
-            Range rng;
-            rng = ExcelSheet.get_Range(cellStart, cellEnd);
-            rng.Interior.Color = System.Drawing.ColorTranslator.ToOle(colorValue);
+            ExcelSheet.get_Range(cellStart, cellEnd).Interior.Color = System.Drawing.ColorTranslator.ToOle(colorValue);
             return;
         }
 
+        /// <summary>
+        /// Insert First Column
+        /// </summary>
+        /// <param name="value"></param>
         public static void InsertFirstColumn(string value)
         {
-            Range rng;
-            rng = ExcelSheet.get_Range("A1");
-            rng.EntireColumn.Insert(XlInsertShiftDirection.xlShiftToRight, XlInsertFormatOrigin.xlFormatFromRightOrBelow);
-            rng = ExcelSheet.get_Range("A1");
-            rng.Value = value;
+            ExcelSheet.Cells[1, 1].EntireColumn.Insert(XlInsertShiftDirection.xlShiftToRight, XlInsertFormatOrigin.xlFormatFromRightOrBelow);
+            SetCellValue(1, 1, value);
             return;
         }
 
+        /// <summary>
+        /// Worksheet To DataTable
+        /// </summary>
+        /// <param name="oSheet"></param>
+        /// <param name="onlyHeader"></param>
+        /// <returns></returns>
         public static DataTable WorksheetToDataTable(Excel.Worksheet oSheet, bool onlyHeader = false)
         {
+            // only headers or all rows
             int totalRows = onlyHeader ? 1 : oSheet.UsedRange.Rows.Count;
+
             int totalCols = oSheet.UsedRange.Columns.Count;
             DataTable dt = new DataTable(oSheet.Name);
             DataRow dr = null;
+
             for (int i = 1; i <= totalRows; i++)
             {
-                if (i > 1) dr = dt.Rows.Add();
+                // no header row?
+                if (i > 1)
+                {
+                    dr = dt.Rows.Add();
+                }
+
                 for (int j = 1; j <= totalCols; j++)
                 {
+                    // header row?
                     if (i == 1)
+                    {
                         dt.Columns.Add(oSheet.Cells[i, j].Value.ToString());
+                    }
                     else
+                    {
                         dr[j - 1] = oSheet.Cells[i, j].Value?.ToString();
+                    }
                 }
+
             }
+
             return dt;
         }
-
 
         /// <summary>
         /// Get Excel Column Names By DataTable
