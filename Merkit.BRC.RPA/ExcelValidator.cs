@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,9 +8,41 @@ using Merkit.RPA.PA.Framework;
 using System.Data;
 using System.Diagnostics.Eventing.Reader;
 using Microsoft.Office.Interop.Excel;
+using Merkit.BRC.RPA;
 
 namespace Merkit.BRC.RPA
 {
+    public enum ExcelColTypeNum
+    {
+        None = 0,
+        Text = 1,
+        Number = 2,
+        Date = 3,
+        DateTime = 4,
+        Dropdown = 5,
+        Link = 6
+    };
+
+    public enum ExcelColRequiredNum
+    {
+        No = 0,
+        Yes = 1
+    };
+
+    public class ExcelCol
+    {
+        public string ColName { get; set; }
+        public ExcelColTypeNum ColType { get; set; }
+        public ExcelColRequiredNum ExcelColRequired { get; set; }
+
+        public ExcelCol(string colName, ExcelColTypeNum colType, ExcelColRequiredNum excelColRequired)
+        {
+            this.ColName = colName;
+            this.ColType = colType;
+            this.ExcelColRequired = excelColRequired;
+        }  
+        
+    }
 
     /// <summary>
     /// BRC_Enterhungary input excel ellenőrzése
@@ -22,102 +55,105 @@ namespace Merkit.BRC.RPA
 
         public static Dictionary<string, string> loadDropdownDict = new Dictionary<string, string>();
 
-        public static List<string> fejlecek = new List<string>() {
-                "Munkavállaló: Azonosító",
-                "Személy: Születési vezetéknév",
-                "Személy: Születési keresztnév",
-                "Személy: Útlevél száma/Személy ig.",
-                "Munkavállaló: Munkakör megnevezése",
-                "Munkavállaló: FEOR",
-                "Személy: Vezetéknév",
-                "Személy: Keresztnév",
-                "Személy: Születési ország",
-                "Személy: Születési hely",
-                "Személy: Születési dátum",
-                "Személy: Anyja vezetékneve",
-                "Személy: Anyja keresztneve",
-                "Személy: Neme",
-                "Személy: Igazolványkép",
-                "Személy: Állampolgárság",
-                "Személy: Családi állapot",
-                "Személy: Útlevél",
-                "Személy: Magyarországra érkezést megelőző foglalkozás",
-                "Személy: Útlevél kiállításának helye",
-                "Személy: Útlevél kiállításának dátuma",
-                "Személy: Útlevél lejáratának dátuma",
-                "Személy: Várható jövedelem",
-                "Személy: Várható jövedelem pénznem",
-                "Személy: Tartózkodási engedély érvényessége",
-                "Díjmentes-e","Engedély hosszabbítás-e",
-                "Útlevél típusa","Iskolai végzettsége",
-                "Munkavállaló: Irányítószám",
-                "Munkavállaló: Település",
-                "Munkavállaló: Közterület neve",
-                "Munkavállaló: Közterület jellege",
-                "Munkavállaló: Házszám",
-                "Munkavállaló: HRSZ",
-                "Munkavállaló: Épület",
-                "Munkavállaló: Lépcsőház",
-                "Munkavállaló: Emelet",
-                "Munkavállaló: Ajtó",
-                "Tartózkodás jogcíme",
-                "Egészségbiztosítás",
-                "Visszautazási ország",
-                "Visszautazáskor közlekedési eszköz",
-                "Visszautazás - útlevél van-e",
-                "Érkezést megelőző ország",
-                "Érkezést megelőző település",
-                "Schengeni tartkózkodási okmány van-e",
-                "Elutasított tartózkodási kérelem",
-                "Büntetett előélet",
-                "Kiutasították-e korábban",
-                "Szenved-e gyógykezelésre szoruló betegségekben",
-                "Kiskorú gyermek vele utazik-e",
-                "Okmány átvétele",
-                "Postai kézbesítés címe:",
-                "Email cím",
-                "Telefonszám",
-                "Benyújtó",
-                "Okmány átvétel külképviseleten?",
-                "Átvételi ország",
-                "Átvételi település",
-                "Munkáltató rövid cégnév",
-                "Munkáltató irányítószám",
-                "Munkáltató település",
-                "Munkáltató közterület neve",
-                "Munkáltató közterület jellege",
-                "Munkáltató házszám/hrsz",
-                "TEÁOR szám",
-                "KSH-szám",
-                "Munkáltató adószáma/adóazonosító jele",
-                "A foglalkoztatás munkaerő-kölcsönzés keretében történik",
-                "Munkakörhöz szükséges iskolai végzettség",
-                "Szakképzettsége",
-                "Munkavégzés helye",
-                "Munkavégzési irányítószám",
-                "Munkavégzési település",
-                "Munkavégzési közterület neve",
-                "Munkavégzési közterület jellege",
-                "Munkavégzési házszám/hrsz",
-                "Munkavégzési Épület",
-                "Munkavégzési Lépcsőház",
-                "Munkavégzési Emelet",
-                "Munkavégzési ajtó",
-                "Foglalkoztatóval kötött megállapodás kelte",
-                "Anyanyelve",
-                "Magyar nyelvismeret",
-                "Dolgozott-e korábban Magarországon?",
-                "Feldolgozottsági Állapot",
-                "Ügyszám",
-                "Ellenőrzés Státusz",
-                "Fájl Feltöltés Státusz" };
+        public static List<ExcelCol> excelHeaders = new List<ExcelCol>() {
+                new ExcelCol("Munkavállaló: Azonosító", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Születési vezetéknév", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Születési keresztnév", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Útlevél száma/Személy ig.", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkavállaló: Munkakör megnevezése", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavállaló: FEOR", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Vezetéknév", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Keresztnév", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Születési ország", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Születési hely", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Születési dátum", ExcelColTypeNum.Date, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Anyja vezetékneve", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Anyja keresztneve", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Neme", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Igazolványkép", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Állampolgárság", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Családi állapot", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Útlevél", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Magyarországra érkezést megelőző foglalkozás", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Személy: Útlevél kiállításának helye", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Útlevél kiállításának dátuma", ExcelColTypeNum.Date, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Útlevél lejáratának dátuma", ExcelColTypeNum.Date, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Várható jövedelem", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Várható jövedelem pénznem", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Személy: Tartózkodási engedély érvényessége", ExcelColTypeNum.Date, ExcelColRequiredNum.Yes),
+                new ExcelCol("Díjmentes-e", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Engedély hosszabbítás-e", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Útlevél típusa",ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Iskolai végzettsége", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkavállaló: Irányítószám", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkavállaló: Település", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkavállaló: Közterület neve", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkavállaló: Közterület jellege", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkavállaló: Házszám", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavállaló: HRSZ", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavállaló: Épület", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavállaló: Lépcsőház", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavállaló: Emelet", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavállaló: Ajtó", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Tartózkodás jogcíme", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Egészségbiztosítás", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Visszautazási ország", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Visszautazáskor közlekedési eszköz", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Visszautazás - útlevél van-e", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Érkezést megelőző ország", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Érkezést megelőző település", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Schengeni tartkózkodási okmány van-e", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Elutasított tartózkodási kérelem", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Büntetett előélet", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Kiutasították-e korábban", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Szenved-e gyógykezelésre szoruló betegségekben", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Kiskorú gyermek vele utazik-e", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Okmány átvétele", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Postai kézbesítés címe:", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Email cím", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Telefonszám", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Benyújtó", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.No),
+                new ExcelCol("Okmány átvétel külképviseleten?", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Átvételi ország", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.No),
+                new ExcelCol("Átvételi település", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkáltató rövid cégnév", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkáltató irányítószám", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkáltató település", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkáltató közterület neve", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkáltató közterület jellege", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkáltató házszám/hrsz", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("TEÁOR szám", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("KSH-szám", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkáltató adószáma/adóazonosító jele", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("A foglalkoztatás munkaerő-kölcsönzés keretében történik", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkakörhöz szükséges iskolai végzettség", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Szakképzettsége", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Munkavégzés helye", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavégzési irányítószám", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavégzési település", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavégzési közterület neve", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavégzési közterület jellege", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavégzési házszám/hrsz", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavégzési Épület", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavégzési Lépcsőház", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavégzési Emelet", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavégzési ajtó", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Foglalkoztatóval kötött megállapodás kelte", ExcelColTypeNum.Date, ExcelColRequiredNum.Yes),
+                new ExcelCol("Anyanyelve", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Magyar nyelvismeret", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Dolgozott-e korábban Magarországon?", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Feldolgozottsági Állapot", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Ügyszám", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Ellenőrzés Státusz", ExcelColTypeNum.None, ExcelColRequiredNum.No),
+                new ExcelCol("Fájl Feltöltés Státusz", ExcelColTypeNum.None, ExcelColRequiredNum.No)
+            };
 
         #endregion
 
         #region Public függvények
 
         /// <summary>
-        /// Az oldalon lévő , a flowhoz szükséges dropdown elemek értékeit  betölti a  lementett txt fájlokból
+        /// Az oldalon lévő, a flowhoz szükséges dropdown elemek értékeit  betölti a  lementett txt fájlokból
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
@@ -155,11 +191,11 @@ namespace Merkit.BRC.RPA
             bool isHeaderOk = true;
             System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet, true);
 
-            foreach (string fejlec in fejlecek)
+            foreach (ExcelCol fejlec in excelHeaders)
             {
-                if (!dt.Columns.Contains(fejlec))
+                if (!dt.Columns.Contains(fejlec.ColName))
                 {
-                    ExcelManager.InsertFirstColumn(fejlec);
+                    ExcelManager.InsertFirstColumn(fejlec.ColName);
                     ExcelManager.SetCellColor("A1", System.Drawing.Color.LightCoral);
                     isHeaderOk = false;
                 }
@@ -218,14 +254,6 @@ namespace Merkit.BRC.RPA
                 {"Munkavállaló: HRSZ",true}
             };
 
-            List<string> datumHeaderek = new List<string>() {
-                "Személy: Születési dátum",
-                "Személy: Útlevél kiállításának dátuma",
-                "Személy: Útlevél lejáratának dátuma",
-                "Személy: Tartózkodási engedély érvényessége",
-                "Foglalkoztatóval kötött megállapodás kelte"
-            };
-
             bool isOk = ExcelManager.OpenExcel(excelFileName);
             System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
             Dictionary<string, string> dictExcelColumnNameToExcellCol = ExcelManager.GetExcelColumnNamesByDataTable(dt);
@@ -244,8 +272,8 @@ namespace Merkit.BRC.RPA
                     // Nőtlen v. hajadon -> Nőtlen/hajadon
                     isRowOk = isRowOk && CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
-                    // *** Dátum Átalakítás És Ellenőrzés
-                    isRowOk = isRowOk && AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol, ref datumHeaderek);
+                    // *** Dátum átalakítás és ellenőrzés
+                    isRowOk = isRowOk && AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
 
                     // *** követ
@@ -290,22 +318,29 @@ namespace Merkit.BRC.RPA
         /// <param name="rowNum"></param>
         /// <param name="fieldList"></param>
         /// <param name="datumHeaderek"></param>
-        private static bool AllDateCheckAndConvert(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList, ref List<string> datumHeaderek)
+        private static bool AllDateCheckAndConvert(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
         {
-            foreach (string colName in datumHeaderek)
-            {
-                string cellValue = ExcelManager.GetDataRowValue(currentRow, colName).ToLower();
-                string cellName = fieldList[colName] + rowNum.ToString();
+            bool isCellValueOk = false;
 
-                if(cellValue.Length>0)
+            // dátum oszlopokon végigmenni
+            foreach (ExcelCol col in excelHeaders.Where(x => x.ColType == ExcelColTypeNum.Date))
+            {
+                string cellValue = ExcelManager.GetDataRowValue(currentRow, col.ColName).ToLower();
+                string cellName = fieldList[col.ColName] + rowNum.ToString();
+
+                if (cellValue.Length>0)
                 {
                     DateTime dateTime = DateTime.MinValue;
                     bool isGoodDate = DateTime.TryParse(cellValue, out dateTime);
                 }
+                else
+                {
+                    isCellValueOk = col.ExcelColRequired == ExcelColRequiredNum.No;
+                }
 
             }
 
-            return true;
+            return isCellValueOk;
         }
 
         #endregion
