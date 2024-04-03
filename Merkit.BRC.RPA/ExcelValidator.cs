@@ -257,6 +257,7 @@ namespace Merkit.BRC.RPA
             bool isOk = ExcelManager.OpenExcel(excelFileName);
             System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
             Dictionary<string, string> dictExcelColumnNameToExcellCol = ExcelManager.GetExcelColumnNamesByDataTable(dt);
+            string checkStatuscellName = dictExcelColumnNameToExcellCol["Ellenőrzés Státusz"];
             bool isRowOk = true;
             int rowNum = 1;
 
@@ -272,18 +273,45 @@ namespace Merkit.BRC.RPA
                     // Nőtlen v. hajadon -> Nőtlen/hajadon
                     isRowOk = isRowOk && CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
+                    // kötelező szöveges oszlopok ellenőrzése
+                    isRowOk = isRowOk && AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
                     // *** Dátum átalakítás és ellenőrzés
                     isRowOk = isRowOk && AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
 
                     // *** követ
+
+                    // Ellenőrzés státusz állítása
+                    ExcelManager.SetCellValue(checkStatuscellName + rowNum.ToString(), isRowOk ? "PASS" : "FAIL");
                 }
-
-
 
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Excel Column Number By Name from DataTable
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        public static int ColumnNumberByName(string columnName, System.Data.DataTable dt)
+        {
+            int colNum = 0;
+
+            foreach (DataColumn col in dt.Columns)
+            {
+                colNum++;
+
+                if (col.ColumnName.ToLower() == columnName.ToLower())
+                {
+                    break;
+                }               
+            }
+
+            return colNum;
         }
 
         #endregion
@@ -312,6 +340,34 @@ namespace Merkit.BRC.RPA
         }
 
         /// <summary>
+        /// Check All Required Text Fields
+        /// </summary>
+        /// <param name="currentRow"></param>
+        /// <param name="rowNum"></param>
+        /// <param name="fieldList"></param>
+        /// <param name="datumHeaderek"></param>
+        private static bool AllRequiredFieldChecker(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
+        {
+            bool isCellValueOk = true;
+
+            // dátum oszlopokon végigmenni
+            foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRequired == ExcelColRequiredNum.Yes))
+            {
+                string cellValue = ExcelManager.GetDataRowValue(currentRow, col.ColName).ToLower();
+                string cellName = fieldList[col.ColName] + rowNum.ToString();
+
+                if (cellValue.Length == 0)
+                {
+                    isCellValueOk = false;
+                    ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                }
+
+            }
+
+            return isCellValueOk;
+        }
+
+        /// <summary>
         /// Check And Convert All Date Fields
         /// </summary>
         /// <param name="currentRow"></param>
@@ -320,7 +376,7 @@ namespace Merkit.BRC.RPA
         /// <param name="datumHeaderek"></param>
         private static bool AllDateCheckAndConvert(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
         {
-            bool isCellValueOk = false;
+            bool isCellValueOk = true;
 
             // dátum oszlopokon végigmenni
             foreach (ExcelCol col in excelHeaders.Where(x => x.ColType == ExcelColTypeNum.Date))
@@ -328,14 +384,14 @@ namespace Merkit.BRC.RPA
                 string cellValue = ExcelManager.GetDataRowValue(currentRow, col.ColName).ToLower();
                 string cellName = fieldList[col.ColName] + rowNum.ToString();
 
-                if (cellValue.Length>0)
+                if (cellValue.Length > 0)
                 {
                     DateTime dateTime = DateTime.MinValue;
                     bool isGoodDate = DateTime.TryParse(cellValue, out dateTime);
                 }
                 else
                 {
-                    isCellValueOk = col.ExcelColRequired == ExcelColRequiredNum.No;
+                    isCellValueOk = isCellValueOk && col.ExcelColRequired == ExcelColRequiredNum.No;
                 }
 
             }
