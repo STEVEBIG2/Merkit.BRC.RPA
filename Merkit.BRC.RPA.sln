@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Merkit.BRC.RPA", "Merkit.BR
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTest", "UnitTest\UnitTest.csproj", "{F3610E75-AD95-4C93-B3EB-22978D6AEBC7}"
 EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "BRC_EnterHungary_Db", "BRC_EnterHungary_Db\BRC_EnterHungary_Db.sqlproj", "{D8444319-1155-4D36-AE92-9D7D3D7A2196}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,12 @@ Global
 		{F3610E75-AD95-4C93-B3EB-22978D6AEBC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3610E75-AD95-4C93-B3EB-22978D6AEBC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F3610E75-AD95-4C93-B3EB-22978D6AEBC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8444319-1155-4D36-AE92-9D7D3D7A2196}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8444319-1155-4D36-AE92-9D7D3D7A2196}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8444319-1155-4D36-AE92-9D7D3D7A2196}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{D8444319-1155-4D36-AE92-9D7D3D7A2196}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8444319-1155-4D36-AE92-9D7D3D7A2196}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8444319-1155-4D36-AE92-9D7D3D7A2196}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
