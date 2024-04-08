@@ -17,7 +17,7 @@ namespace UnitTestProject1
         private const string PasswordName = "UiPath: Enter Hungary";
         private const string UserName = "istvan.nagy@merkit.hu";
         private const string Password = "Qw52267660";
-        private const string ExcelFleName = @"c:\Munka\x-3.xlsx";
+        private const string ExcelFleName = @"c:\Munka\x-10.xlsx";
 
         [TestMethod]
         public void TestLoadDropdownValues()
@@ -30,12 +30,6 @@ namespace UnitTestProject1
         public void TestExcelHeaderValidator()
         {
             bool isOk = ExcelValidator.ExcelHeaderValidator(ExcelFleName);
-
-            if (isOk)
-            {
-                ExcelManager.CloseExcel();
-            }
-
             Assert.IsTrue(isOk);
         }
 
@@ -43,12 +37,6 @@ namespace UnitTestProject1
         public void TestExcelRowsValidator()
         {
             bool isOk = ExcelValidator.ExcelRowsValidator(ExcelFleName);
-
-            if (isOk)
-            {
-                ExcelManager.CloseExcel();
-            }
-
             Assert.IsTrue(isOk);
         }
 

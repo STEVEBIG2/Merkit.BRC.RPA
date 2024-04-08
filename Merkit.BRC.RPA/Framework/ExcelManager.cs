@@ -93,6 +93,7 @@ namespace Merkit.RPA.PA.Framework
                 if (ExcelWorkbook != null)
                 {
                     System.Runtime.InteropServices.Marshal.ReleaseComObject(ExcelWorkbook);
+                    ExcelWorkbook = null;
                 }
 
 
@@ -100,6 +101,7 @@ namespace Merkit.RPA.PA.Framework
                 {
                     ExcelApp.Quit();
                     System.Runtime.InteropServices.Marshal.ReleaseComObject(ExcelApp);
+                    ExcelApp = null;
                 }
 
             }

@@ -259,36 +259,46 @@ namespace Merkit.BRC.RPA
             Dictionary<string, string> dictExcelColumnNameToExcellCol = ExcelManager.GetExcelColumnNamesByDataTable(dt);
             string checkStatuscellName = dictExcelColumnNameToExcellCol["Ellenőrzés Státusz"];
             bool isRowOk = true;
+            bool isGoodRow = false;
             int rowNum = 1;
 
             // összes sor 
             foreach (DataRow currentRow in dt.Rows)
             {
                 isRowOk = true;
-                rowNum++;                
+                rowNum++;
 
-                // nem kihagyandó tétel?
-                if(! ExcelManager.GetDataRowValue(currentRow, "Ellenőrzés Státusz").ToLower().Contains("pass"))
+                // feldolgozatlan sor?
+                if(String.IsNullOrEmpty(ExcelManager.GetDataRowValue(currentRow, "Feldolgozottsági Állapot")))
                 {
-                    // Nőtlen v. hajadon -> Nőtlen/hajadon
-                    isRowOk = isRowOk && CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                    // nem kihagyandó tétel?
+                    if (!ExcelManager.GetDataRowValue(currentRow, "Ellenőrzés Státusz").ToLower().Contains("pass"))
+                    {
+                        // Nőtlen v. hajadon -> Nőtlen/hajadon
+                        isRowOk = isRowOk && CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
-                    // kötelező szöveges oszlopok ellenőrzése
-                    isRowOk = isRowOk && AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                        // kötelező szöveges oszlopok ellenőrzése
+                        isRowOk = isRowOk && AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
-                    // *** Dátum átalakítás és ellenőrzés
-                    isRowOk = isRowOk && AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                        // *** Dátum átalakítás és ellenőrzés
+                        isRowOk = isRowOk && AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
 
-                    // *** követ
+                        // *** követ
 
-                    // Ellenőrzés státusz állítása
-                    ExcelManager.SetCellValue(checkStatuscellName + rowNum.ToString(), isRowOk ? "PASS" : "FAIL");
+                        // Ellenőrzés státusz állítása
+                        ExcelManager.SetCellValue(checkStatuscellName + rowNum.ToString(), isRowOk ? "PASS" : "FAIL");
+                        isGoodRow = isGoodRow || isRowOk; // van legalább egy jó sor
+                    }
+                    else
+                    {
+                        isGoodRow = true;
+                    }
                 }
-
             }
-
-            return true;
+            
+            ExcelManager.CloseExcel();
+            return isGoodRow;
         }
 
         /// <summary>
