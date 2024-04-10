@@ -62,10 +62,10 @@ namespace UnitTestProject1
         }
 
 
-       [TestMethod]
-        public void TestSqlQuery()
+        [TestMethod]
+        public void TestSqlScripter()
         {
-            bool isOk = ExcelValidator.LoadDropdownValues("C:\\Merkit\\_BRC_EnterHungary\\Textfiles");
+            bool isOk = ExcelValidator.LoadDropdownValuesFromTextFiles("C:\\Merkit\\_BRC_EnterHungary\\Textfiles");
             string dropDownType = "zipcode";
             string dropdownName = String.Format("{0}_dropdown", dropDownType.Replace(" ", "_"));
             List<string> dropDownValues = new List<string>();
@@ -84,10 +84,17 @@ namespace UnitTestProject1
             }
 
             string script = sb.ToString();
+            Assert.IsTrue(isOk);
+        }
+
+        [TestMethod]
+        public void TestSqlQuery()
+        {
+            //bool isOk = ExcelValidator.LoadDropdownValuesFromSQL("C:\\Merkit\\_BRC_EnterHungary\\Textfiles");
 
             DataTable dt = new DataTable();
             int rows_returned;
-            
+
             string msSqlHost = @"STEVE-LAPTOP\SQLEXPRESS";
             string msSqlDatabase = "BRC_Hungary_Test";
             string userName = "BRCHungaryUserTest";
@@ -99,7 +106,7 @@ namespace UnitTestProject1
             using (SqlCommand cmd = connection.CreateCommand())
             using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
             {
-                cmd.CommandText = "Select * From EnterHungaryLogins Where Deleted=0";
+                cmd.CommandText = "select * from View_DropDowns ORDER BY 1,2,3";
                 cmd.CommandType = CommandType.Text;
                 connection.Open();
                 rows_returned = sda.Fill(dt);
@@ -107,15 +114,24 @@ namespace UnitTestProject1
             }
 
 
+            // dt -> List class
+            ExcelValidator.loadDropdownList.Clear();
 
-            Assert.IsTrue(isOk);
+            string x = "";
+            foreach (DataRow row in dt.Rows)
+            {
+
+            }
+
+
+            Assert.IsTrue(true);
         }
 
 
         [TestMethod]
         public void TestLoadDropdownValues()
         {
-            bool isOk = ExcelValidator.LoadDropdownValues("C:\\Merkit\\BRC_EnterHungary\\Textfiles");
+            bool isOk = ExcelValidator.LoadDropdownValuesFromTextFiles("C:\\Merkit\\BRC_EnterHungary\\Textfiles");
             Assert.IsTrue(isOk);
         }
 

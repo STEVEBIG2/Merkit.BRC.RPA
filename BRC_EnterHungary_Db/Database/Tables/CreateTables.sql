@@ -1,4 +1,4 @@
--- Use BRC_Hungary_Test
+-- Use BRC_Hungary_Testx
 -- GO
 
 -- DROP TABLE ExcelRows

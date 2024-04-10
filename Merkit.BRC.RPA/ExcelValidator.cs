@@ -54,6 +54,7 @@ namespace Merkit.BRC.RPA
         public static string TextFilePath { get; set; }
 
         public static Dictionary<string, string> loadDropdownDict = new Dictionary<string, string>();
+        public static Dictionary<string, List<string>> loadDropdownList = new Dictionary<string, List<string>>();
 
         public static List<ExcelCol> excelHeaders = new List<ExcelCol>() {
                 new ExcelCol("Munkavállaló: Azonosító", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
@@ -157,7 +158,7 @@ namespace Merkit.BRC.RPA
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static bool LoadDropdownValues(string path)
+        public static bool LoadDropdownValuesFromTextFiles(string path)
         {
             loadDropdownDict.Clear();
 
@@ -180,6 +181,33 @@ namespace Merkit.BRC.RPA
             return true;
         }
 
+        /// <summary>
+        /// Az oldalon lévő, a flowhoz szükséges dropdown elemek értékeit  betölti a  lementett txt fájlokból
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static bool LoadDropdownValuesFromSQL(string path)
+        {
+            loadDropdownDict.Clear();
+
+            string[] dropdownType = {
+                "állampolgárság", "átvételi ország", "benyújtó", "családi állapot", "egészségbiztosítás",
+                "előző ország", "FEOR", "iskolai végzettség", "munkakör iskolai végzettség", "munkáltató közterület jellege",
+                "nem", "nemzetiség", "nyelv", "pénznem", "szállás emelet",
+                "szállás közterület jellege", "szállás tartózkodási jogcíme", "szül_ország", "TEÁOR", "továbbut ország",
+                "útlevél tipus", "zipcode"
+            };
+
+            foreach (string type in dropdownType)
+            {
+                loadDropdownDict.Add(
+                    String.Format("{0}_dropdown", type.Replace(" ", "_")),
+                    FileManager.ReadTextFile(Path.Combine(path, type + ".txt"))
+                    );
+            }
+
+            return true;
+        }
         /// <summary>
         /// Excel Header Validator
         /// </summary>
