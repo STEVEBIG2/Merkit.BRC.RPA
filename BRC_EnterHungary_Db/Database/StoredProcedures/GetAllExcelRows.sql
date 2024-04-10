@@ -1,4 +1,4 @@
-USE NCore
+USE BRC_Hungary_Test
 GO
 
 SET ANSI_NULLS ON
@@ -10,7 +10,7 @@ GO
 
 -- =============================================  
 -- Author: Steve
--- Create date: 2020.09.14
+-- Create date: 2024.04.09
 -- Description: Get All Excel Row
 -- ============================================= 
 CREATE PROCEDURE [dbo].[GetAllExcelRows]

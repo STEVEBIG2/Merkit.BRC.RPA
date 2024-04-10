@@ -8,6 +8,13 @@ using DataTable = System.Data.DataTable;
 using System.Drawing;
 using Microsoft.Office.Interop.Excel;
 using System.Collections.Generic;
+using static System.Net.Mime.MediaTypeNames;
+using System.Text.RegularExpressions;
+using System.Reflection.Emit;
+using System.Data.SqlClient;
+using System.Net;
+using System.Linq;
+using System.Text;
 
 namespace UnitTestProject1
 {
@@ -18,6 +25,92 @@ namespace UnitTestProject1
         private const string UserName = "istvan.nagy@merkit.hu";
         private const string Password = "Qw52267660";
         private const string ExcelFleName = @"c:\Munka\x-10.xlsx";
+        // String.Format("Data Source={0};Initial Catalog={1};User Id={2};Password={3};Application Name={4};Connect Timeout={5};Encrypt=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False; MultipleActiveResultSets=True", in_Config.MsSqlHost, in_Config.MsSqlDatabase, userName, password, in_Config.AppCode, 30)
+
+        [TestMethod]
+        public void TestBankHolidays()
+        {
+            // set once at the beginning of the year
+            string[] extraWorkDays = { "0427", "1201" }; // extra work days 
+            string[] extraDaysOff = { "0101", "1227" }; // extra days off (for example holidays)
+
+            // test values
+            DateTime workday = new DateTime(2024, 04, 10);
+            DateTime weekendDay = new DateTime(2024, 04, 14);
+            DateTime workDaySaturday = new DateTime(2024, 04, 27);
+            DateTime dayOffMonday = new DateTime(2024, 01, 01);
+
+            // change this value for test
+            DateTime dt = dayOffMonday;
+
+            // *** put it into function
+            string monthDay = dt.ToString("MMdd");
+            bool isWorkDay = ! (dt.DayOfWeek == DayOfWeek.Saturday || dt.DayOfWeek == DayOfWeek.Sunday) ;
+
+            if (isWorkDay)
+            {
+                isWorkDay = isWorkDay && ! extraDaysOff.Contains(monthDay);
+            }
+            else
+            {
+                isWorkDay = isWorkDay || extraWorkDays.Contains(monthDay);
+            }
+
+            // return isWorkDay;
+
+            Assert.IsTrue(true);
+        }
+
+
+       [TestMethod]
+        public void TestSqlQuery()
+        {
+            bool isOk = ExcelValidator.LoadDropdownValues("C:\\Merkit\\_BRC_EnterHungary\\Textfiles");
+            string dropDownType = "zipcode";
+            string dropdownName = String.Format("{0}_dropdown", dropDownType.Replace(" ", "_"));
+            List<string> dropDownValues = new List<string>();
+            string[] lines = ExcelValidator.loadDropdownDict[dropdownName].Split(new string[] { "\r\n", "\r", "\n" },StringSplitOptions.None);
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (string line in lines)
+            {
+                if (! dropDownValues.Contains(line))
+                {
+                    dropDownValues.Add(line.ToString());
+                    sb.AppendLine(String.Format("INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTypeId, '{0}')", line));
+                }
+
+            }
+
+            string script = sb.ToString();
+
+            DataTable dt = new DataTable();
+            int rows_returned;
+            
+            string msSqlHost = @"STEVE-LAPTOP\SQLEXPRESS";
+            string msSqlDatabase = "BRC_Hungary_Test";
+            string userName = "BRCHungaryUserTest";
+            string password = "Qw52267660";
+            string appCode = "BRC_EH_Test";
+            string conStr = String.Format("Data Source={0};Initial Catalog={1};User Id={2};Password={3};Application Name={4};Connect Timeout={5};Encrypt=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False; MultipleActiveResultSets=True", msSqlHost, msSqlDatabase, userName, password, appCode, 30);
+
+            using (SqlConnection connection = new SqlConnection(conStr))
+            using (SqlCommand cmd = connection.CreateCommand())
+            using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+            {
+                cmd.CommandText = "Select * From EnterHungaryLogins Where Deleted=0";
+                cmd.CommandType = CommandType.Text;
+                connection.Open();
+                rows_returned = sda.Fill(dt);
+                connection.Close();
+            }
+
+
+
+            Assert.IsTrue(isOk);
+        }
+
 
         [TestMethod]
         public void TestLoadDropdownValues()

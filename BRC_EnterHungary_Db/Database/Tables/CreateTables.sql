@@ -1,4 +1,4 @@
--- USE NCore
+-- Use BRC_Hungary_Test
 -- GO
 
 -- DROP TABLE ExcelRows
@@ -7,6 +7,78 @@
 -- GO
 -- DROP TABLE QStatuses
 -- GO
+-- Drop TABLE EnterHungaryLogins
+-- GO
+
+select @@VERSION
+GO
+
+CREATE TABLE EnterHungaryLogins
+(
+	EnterHungaryLoginId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Email VARCHAR(100) NOT NULL,
+	PasswordText VARCHAR(100) NOT NULL,
+	Deleted INT NOT NULL DEFAULT 0
+)
+GO
+
+CREATE UNIQUE INDEX IX1_EnterHungaryLogins On EnterHungaryLogins(Email)
+GO
+
+CREATE INDEX IX2_EnterHungaryLogins On EnterHungaryLogins(Deleted)
+GO
+
+-- DropDownTypes, DropDownsValues
+--Drop TABLE DropDownsValues
+--go
+--Drop TABLE DropDownTypes
+--go
+
+CREATE TABLE DropDownTypes
+(
+	DropDownTypeId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	DropDownName VARCHAR(50) NOT NULL,
+	Deleted INT NOT NULL DEFAULT 0
+)
+GO
+
+CREATE UNIQUE INDEX IX1_DropDownTypes On DropDownTypes(DropDownName)
+GO
+
+CREATE INDEX IX2_DropDownTypes On DropDownTypes(Deleted)
+GO
+
+CREATE TABLE DropDownsValues
+(
+	DropDownsValuesId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	DropDownTypeId INT NOT NULL,
+	DropDownValue VARCHAR(100) NOT NULL,
+	Deleted INT NOT NULL DEFAULT 0
+)
+GO
+
+CREATE UNIQUE INDEX IX1_DropDownsValues On DropDownsValues(DropDownTypeId, DropDownValue)
+GO
+
+CREATE INDEX IX2_DropDownsValues On DropDownsValues(DropDownTypeId, DropDownValue, Deleted)
+GO
+
+CREATE INDEX IX3_DropDownsValues On DropDownsValues(DropDownTypeId)
+GO
+
+ALTER TABLE DropDownsValues  WITH CHECK ADD  CONSTRAINT FK_DropDownsValues_DropDownTypes FOREIGN KEY(DropDownTypeId) REFERENCES DropDownTypes (DropDownTypeId)
+GO
+
+ALTER TABLE DropDownsValues CHECK CONSTRAINT FK_DropDownsValues_DropDownTypes
+GO
+
+CREATE VIEW View_DropDowns AS
+SELECT dt.DropDownTypeId, dt.DropDownName, dv.DropDownsValuesId, dv.DropDownValue
+  FROM DropDownsValues dv INNER JOIN DropDownTypes dt ON (dv.DropDownTypeId=dt.DropDownTypeId AND dt.Deleted=0)
+  WHERE dv.Deleted=0
+GO
+
+--
 
 CREATE TABLE QStatuses (
 	QStatusId int NOT NULL,
@@ -36,16 +108,16 @@ GO
 
 --
 
-CREATE TABLE [dbo].[ExcelFiles](
-	[ExcelFileId] [int] IDENTITY(1,1) NOT NULL ,
-	[ExcelFileName] [varchar](50) NOT NULL,
-	[ExcelType] [varchar](20) NOT NULL,
-	[QStatusId] [int] NULL,
-	[QStatusTime] [datetime] NULL,
-	[RobotName] [varchar](50) NULL,
- CONSTRAINT [PK_ExcelFiles] PRIMARY KEY NONCLUSTERED 
+CREATE TABLE ExcelFiles (
+	ExcelFileId int IDENTITY(1,1) NOT NULL ,
+	ExcelFileName varchar(50) NOT NULL,
+	ExcelType varchar(20) NOT NULL,
+	QStatusId int NULL,
+	QStatusTime datetime NULL,
+	RobotName varchar(50) NULL,
+ CONSTRAINT PK_ExcelFiles PRIMARY KEY NONCLUSTERED 
 (
-	[ExcelFileId] ASC
+	ExcelFileId ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO

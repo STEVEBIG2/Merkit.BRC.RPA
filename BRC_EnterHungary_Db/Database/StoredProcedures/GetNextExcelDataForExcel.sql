@@ -1,4 +1,4 @@
-USE [NCoreTeszt]
+USE BRC_Hungary_Test
 GO
 
 /****** Object:  StoredProcedure [dbo].[GetNextExcelDataForExcel]    Script Date: 2020. 12. 01. 18:16:45 ******/
@@ -11,7 +11,7 @@ GO
 
 -- =============================================  
 -- Author: Steve
--- Create date: 2020.09.25
+-- Create date: 2024.04.09
 -- Description: Get Next Excel Data For Excel
 -- ============================================= 
 CREATE PROCEDURE [dbo].[GetNextExcelDataForExcel]

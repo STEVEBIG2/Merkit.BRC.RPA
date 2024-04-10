@@ -67,5 +67,6 @@
     <Build Include="Database\StoredProcedures\InsertExcelRow.sql" />
     <Build Include="Database\StoredProcedures\ResetQStatusId.sql" />
     <Build Include="Database\StoredProcedures\SetAllStatusId.sql" />
+    <Build Include="Database\Tables\DropDownsValues.sql" />
   </ItemGroup>
 </Project>
