@@ -20,7 +20,8 @@ namespace Merkit.BRC.RPA
         Date = 3,
         DateTime = 4,
         Dropdown = 5,
-        Link = 6
+        YesNo = 6,
+        Link = 7
     };
 
     public enum ExcelColRequiredNum
@@ -82,8 +83,8 @@ namespace Merkit.BRC.RPA
                 new ExcelCol("Személy: Várható jövedelem", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
                 new ExcelCol("Személy: Várható jövedelem pénznem", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
                 new ExcelCol("Személy: Tartózkodási engedély érvényessége", ExcelColTypeNum.Date, ExcelColRequiredNum.Yes),
-                new ExcelCol("Díjmentes-e", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
-                new ExcelCol("Engedély hosszabbítás-e", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
+                new ExcelCol("Díjmentes-e", ExcelColTypeNum.YesNo, ExcelColRequiredNum.Yes),
+                new ExcelCol("Engedély hosszabbítás-e", ExcelColTypeNum.YesNo, ExcelColRequiredNum.Yes),
                 new ExcelCol("Útlevél típusa",ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
                 new ExcelCol("Iskolai végzettsége", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
                 new ExcelCol("Munkavállaló: Irányítószám", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
@@ -96,21 +97,21 @@ namespace Merkit.BRC.RPA
                 new ExcelCol("Munkavállaló: Lépcsőház", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
                 new ExcelCol("Munkavállaló: Emelet", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.No),
                 new ExcelCol("Munkavállaló: Ajtó", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
-                new ExcelCol("Tartózkodás jogcíme", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Tartózkodás jogcíme", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
                 new ExcelCol("Egészségbiztosítás", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
                 new ExcelCol("Visszautazási ország", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
                 new ExcelCol("Visszautazáskor közlekedési eszköz", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
-                new ExcelCol("Visszautazás - útlevél van-e", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Visszautazás - útlevél van-e", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
                 new ExcelCol("Érkezést megelőző ország", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
                 new ExcelCol("Érkezést megelőző település", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
-                new ExcelCol("Schengeni tartkózkodási okmány van-e", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
-                new ExcelCol("Elutasított tartózkodási kérelem", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
-                new ExcelCol("Büntetett előélet", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
-                new ExcelCol("Kiutasították-e korábban", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
-                new ExcelCol("Szenved-e gyógykezelésre szoruló betegségekben", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
-                new ExcelCol("Kiskorú gyermek vele utazik-e", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
-                new ExcelCol("Okmány átvétele", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
-                new ExcelCol("Postai kézbesítés címe:", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Schengeni tartkózkodási okmány van-e", ExcelColTypeNum.YesNo, ExcelColRequiredNum.No),
+                new ExcelCol("Elutasított tartózkodási kérelem", ExcelColTypeNum.YesNo, ExcelColRequiredNum.No),
+                new ExcelCol("Büntetett előélet", ExcelColTypeNum.YesNo, ExcelColRequiredNum.No),
+                new ExcelCol("Kiutasították-e korábban", ExcelColTypeNum.YesNo, ExcelColRequiredNum.No),
+                new ExcelCol("Szenved-e gyógykezelésre szoruló betegségekben", ExcelColTypeNum.YesNo, ExcelColRequiredNum.No),
+                new ExcelCol("Kiskorú gyermek vele utazik-e", ExcelColTypeNum.YesNo, ExcelColRequiredNum.No),
+                new ExcelCol("Okmány átvétele", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
+                new ExcelCol("Postai kézbesítés címe:", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
                 new ExcelCol("Email cím", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
                 new ExcelCol("Telefonszám", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
                 new ExcelCol("Benyújtó", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.No),
@@ -129,7 +130,7 @@ namespace Merkit.BRC.RPA
                 new ExcelCol("A foglalkoztatás munkaerő-kölcsönzés keretében történik", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
                 new ExcelCol("Munkakörhöz szükséges iskolai végzettség", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
                 new ExcelCol("Szakképzettsége", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
-                new ExcelCol("Munkavégzés helye", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Munkavégzés helye", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
                 new ExcelCol("Munkavégzési irányítószám", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.No),
                 new ExcelCol("Munkavégzési település", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
                 new ExcelCol("Munkavégzési közterület neve", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
@@ -141,8 +142,8 @@ namespace Merkit.BRC.RPA
                 new ExcelCol("Munkavégzési ajtó", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
                 new ExcelCol("Foglalkoztatóval kötött megállapodás kelte", ExcelColTypeNum.Date, ExcelColRequiredNum.Yes),
                 new ExcelCol("Anyanyelve", ExcelColTypeNum.Dropdown, ExcelColRequiredNum.Yes),
-                new ExcelCol("Magyar nyelvismeret", ExcelColTypeNum.Text, ExcelColRequiredNum.Yes),
-                new ExcelCol("Dolgozott-e korábban Magarországon?", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
+                new ExcelCol("Magyar nyelvismeret", ExcelColTypeNum.YesNo, ExcelColRequiredNum.Yes),
+                new ExcelCol("Dolgozott-e korábban Magarországon?", ExcelColTypeNum.YesNo, ExcelColRequiredNum.No),
                 new ExcelCol("Feldolgozottsági Állapot", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
                 new ExcelCol("Ügyszám", ExcelColTypeNum.Text, ExcelColRequiredNum.No),
                 new ExcelCol("Ellenőrzés Státusz", ExcelColTypeNum.None, ExcelColRequiredNum.No),
@@ -158,7 +159,7 @@ namespace Merkit.BRC.RPA
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static bool LoadDropdownValuesFromTextFiles(string path)
+        public static bool DEADCODE__LoadDropdownValuesFromTextFiles(string path)
         {
             loadDropdownDict.Clear();
 
@@ -180,13 +181,14 @@ namespace Merkit.BRC.RPA
 
             return true;
         }
+
 
         /// <summary>
-        /// Az oldalon lévő, a flowhoz szükséges dropdown elemek értékeit  betölti a  lementett txt fájlokból
+        /// Az oldalon lévő, a flowhoz szükséges dropdown elemek értékeit betölti SQL-bők
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="sqlManager"></param>
         /// <returns></returns>
-        public static bool LoadDropdownValuesFromSQL(string path)
+        public static bool LoadDropdownValuesFromSQL(MSSQLManager sqlManager)
         {
             loadDropdownDict.Clear();
 
@@ -208,6 +210,7 @@ namespace Merkit.BRC.RPA
 
             return true;
         }
+
         /// <summary>
         /// Excel Header Validator
         /// </summary>

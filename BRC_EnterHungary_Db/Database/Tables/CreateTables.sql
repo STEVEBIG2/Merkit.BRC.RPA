@@ -1,4 +1,4 @@
--- Use BRC_Hungary_Testx
+-- Use BRC_Hungary_Test
 -- GO
 
 -- DROP TABLE ExcelRows
@@ -29,6 +29,8 @@ CREATE INDEX IX2_EnterHungaryLogins On EnterHungaryLogins(Deleted)
 GO
 
 -- DropDownTypes, DropDownsValues
+--DROP VIEW View_DropDowns
+--go
 --Drop TABLE DropDownsValues
 --go
 --Drop TABLE DropDownTypes
@@ -38,6 +40,7 @@ CREATE TABLE DropDownTypes
 (
 	DropDownTypeId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	DropDownName VARCHAR(50) NOT NULL,
+	ExcelColNames VARCHAR(150) NOT NULL,
 	Deleted INT NOT NULL DEFAULT 0
 )
 GO
@@ -45,7 +48,10 @@ GO
 CREATE UNIQUE INDEX IX1_DropDownTypes On DropDownTypes(DropDownName)
 GO
 
-CREATE INDEX IX2_DropDownTypes On DropDownTypes(Deleted)
+CREATE INDEX IX2_DropDownTypes On DropDownTypes(ExcelColNames)
+GO
+
+CREATE INDEX IX3_DropDownTypes On DropDownTypes(Deleted)
 GO
 
 CREATE TABLE DropDownsValues
@@ -73,7 +79,7 @@ ALTER TABLE DropDownsValues CHECK CONSTRAINT FK_DropDownsValues_DropDownTypes
 GO
 
 CREATE VIEW View_DropDowns AS
-SELECT dt.DropDownTypeId, dt.DropDownName, dv.DropDownsValuesId, dv.DropDownValue
+SELECT dt.DropDownTypeId, dt.DropDownName, dt.ExcelColNames, dv.DropDownsValuesId, dv.DropDownValue
   FROM DropDownsValues dv INNER JOIN DropDownTypes dt ON (dv.DropDownTypeId=dt.DropDownTypeId AND dt.Deleted=0)
   WHERE dv.Deleted=0
 GO
@@ -106,7 +112,7 @@ GO
 INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (6, 'Deleted')
 GO
 
---
+-- ** ExcelFiles, ExcelRows. ExcelRows
 
 CREATE TABLE ExcelFiles (
 	ExcelFileId int IDENTITY(1,1) NOT NULL ,
@@ -126,6 +132,10 @@ CREATE UNIQUE INDEX IX1_ExcelFiles On ExcelFiles(ExcelFileName)
 GO
 CREATE INDEX IX2_ExcelFiles On ExcelFiles(ExcelType, QStatusId)
 GO
+
+---
+
+-- ExcelSheets
 
 ---
 

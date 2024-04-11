@@ -1,58 +1,58 @@
-﻿-- DropDownTypes sorok
+﻿-- DropDownTypes sorok 
 SET NOCOUNT ON
 go
 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Útlevél Van-e')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Útlevél Van-e','Visszautazás - útlevél van-e')
+GO			 
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Állampolgárság','Személy: Állampolgárság')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Állampolgárság')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Átvételi Ország','Átvételi ország')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Átvételi Ország')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Benyújtó','Benyújtó')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Benyújtó')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Családi Állapot','Személy: Családi állapot')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Családi Állapot')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Egészségbiztosítás','Egészségbiztosítás')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Egészségbiztosítás')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Előző Ország','Érkezést megelőző ország')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Előző Ország')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('FEOR','Munkavállaló: FEOR')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('FEOR')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Iskolai Végzettség','Iskolai végzettsége')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Iskolai Végzettség')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Munkakör Iskolai Végzettség','Munkakörhöz szükséges iskolai végzettség')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Munkakör Iskolai Végzettség')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Munkáltató Közterület Jellege','Munkáltató közterület jellege')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Munkáltató Közterület Jellege')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Nem','Személy: Neme')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Nem')
-GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Nemzetiség')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Nemzetiség','') -- *** nincs az excel-ben???
 GO
-INSERT INTO DropDownTypes(DropDownName) VALUES('Nyelv')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Nyelv','Anyanyelve')
 GO	
-INSERT INTO DropDownTypes(DropDownName) VALUES('Pénznem')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Pénznem','Személy: Várható jövedelem pénznem')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Szállás Emelet')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Szállás Emelet','Munkavállaló: Emelet')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Szállás Közterület Jellege')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Szállás Közterület Jellege','Munkavállaló: Közterület jellege')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Szállás Tartózkodási Jogcíme')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Szállás Tartózkodási Jogcíme','Tartózkodás jogcíme')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Születési Ország')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Születési Ország','Személy: Születési ország')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('TEÁOR')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('TEÁOR','TEÁOR szám')
 GO								 
-INSERT INTO DropDownTypes(DropDownName) VALUES('Továbbutazási Ország')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Továbbutazási Ország','Visszautazási ország')
 GO
-INSERT INTO DropDownTypes(DropDownName) VALUES('Útlevél Típus')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Útlevél Típus','Útlevél típusa')
 GO
-INSERT INTO DropDownTypes(DropDownName) VALUES('Irányítószám')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Irányítószám','Munkavégzési irányítószám')
 GO
-INSERT INTO DropDownTypes(DropDownName) VALUES('Munkavégzés Helye')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Munkavégzés Helye','Munkavégzés helye') 
 GO
-INSERT INTO DropDownTypes(DropDownName) VALUES('Okmány Átvétele')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Okmány Átvétele','Okmány átvétele')
 GO
-INSERT INTO DropDownTypes(DropDownName) VALUES('Kézbesítés Címe')
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Kézbesítés Címe','Postai kézbesítés címe:')
 GO
 
 -- ** 26/1 : Útlevél Van-e **

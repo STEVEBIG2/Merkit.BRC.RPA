@@ -90,41 +90,34 @@ namespace UnitTestProject1
         [TestMethod]
         public void TestSqlQuery()
         {
-            //bool isOk = ExcelValidator.LoadDropdownValuesFromSQL("C:\\Merkit\\_BRC_EnterHungary\\Textfiles");
+            Dictionary<string, Dictionary<string, int>> dropDownIDsbyType = new Dictionary<string, Dictionary<string, int>>();
+
+            foreach (ExcelCol col in ExcelValidator.excelHeaders.Where(x => x.ColType == ExcelColTypeNum.Dropdown))
+            {
+                dropDownIDsbyType.Add(col.ColName, new Dictionary<string, int>());
+            }
 
             DataTable dt = new DataTable();
             int rows_returned;
 
-            string msSqlHost = @"STEVE-LAPTOP\SQLEXPRESS";
-            string msSqlDatabase = "BRC_Hungary_Test";
-            string userName = "BRCHungaryUserTest";
-            string password = "Qw52267660";
-            string appCode = "BRC_EH_Test";
-            string conStr = String.Format("Data Source={0};Initial Catalog={1};User Id={2};Password={3};Application Name={4};Connect Timeout={5};Encrypt=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False; MultipleActiveResultSets=True", msSqlHost, msSqlDatabase, userName, password, appCode, 30);
 
-            using (SqlConnection connection = new SqlConnection(conStr))
-            using (SqlCommand cmd = connection.CreateCommand())
-            using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
-            {
-                cmd.CommandText = "select * from View_DropDowns ORDER BY 1,2,3";
-                cmd.CommandType = CommandType.Text;
-                connection.Open();
-                rows_returned = sda.Fill(dt);
-                connection.Close();
-            }
+            MSSQLManager sqlManager = new MSSQLManager(@"STEVE-LAPTOP\SQLEXPRESS", "BRC_Hungary_Test", "BRCHungaryUserTest", "Qw52267660", "BRC_EH_Test");
+            SqlConnection connection = sqlManager.Connect();
+            dt = sqlManager.ExecuteQuery("select * from View_DropDowns ORDER BY 1,2,3");
 
+
+
+
+            sqlManager.Disconnect();
+
+            rows_returned = dt.Rows.Count;
 
             // dt -> List class
             ExcelValidator.loadDropdownList.Clear();
 
-            string x = "";
-            foreach (DataRow row in dt.Rows)
-            {
-
-            }
-
 
             Assert.IsTrue(true);
+
         }
 
 
