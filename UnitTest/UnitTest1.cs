@@ -63,70 +63,65 @@ namespace UnitTestProject1
 
 
         [TestMethod]
-        public void TestSqlScripter()
-        {
-            bool isOk = ExcelValidator.LoadDropdownValuesFromTextFiles("C:\\Merkit\\_BRC_EnterHungary\\Textfiles");
-            string dropDownType = "zipcode";
-            string dropdownName = String.Format("{0}_dropdown", dropDownType.Replace(" ", "_"));
-            List<string> dropDownValues = new List<string>();
-            string[] lines = ExcelValidator.loadDropdownDict[dropdownName].Split(new string[] { "\r\n", "\r", "\n" },StringSplitOptions.None);
-
-            StringBuilder sb = new StringBuilder();
-
-            foreach (string line in lines)
-            {
-                if (! dropDownValues.Contains(line))
-                {
-                    dropDownValues.Add(line.ToString());
-                    sb.AppendLine(String.Format("INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTypeId, '{0}')", line));
-                }
-
-            }
-
-            string script = sb.ToString();
-            Assert.IsTrue(isOk);
-        }
-
-        [TestMethod]
         public void TestSqlQuery()
         {
+            MSSQLManager sqlManager = new MSSQLManager(@"STEVE-LAPTOP\SQLEXPRESS", "BRC_Hungary_Test", "BRCHungaryUserTest", "Qw52267660", "BRC_EH_Test");
+            SqlConnection connection = sqlManager.Connect();
+
+            bool isOk = ExcelManager.OpenExcel(ExcelFleName);
+            System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
+
+            //  ** dropdown oszlopok kigyűjtése kódlista készítéshez
             Dictionary<string, Dictionary<string, int>> dropDownIDsbyType = new Dictionary<string, Dictionary<string, int>>();
 
-            foreach (ExcelCol col in ExcelValidator.excelHeaders.Where(x => x.ColType == ExcelColTypeNum.Dropdown))
+            foreach(ExcelCol col in ExcelValidator.excelHeaders.Where(x => x.ColType == ExcelColTypeNum.Dropdown))
             {
                 dropDownIDsbyType.Add(col.ColName, new Dictionary<string, int>());
             }
 
-            DataTable dt = new DataTable();
-            int rows_returned;
+            string cellValue = "";
 
+            // dropdown oszlopok típusa alapján kódlista készítése
+            foreach(DataRow excelRow in dt.Rows)
+            {
+                foreach (string colName in dropDownIDsbyType.Keys)
+                {
+                    cellValue = excelRow[colName].ToString();
 
-            MSSQLManager sqlManager = new MSSQLManager(@"STEVE-LAPTOP\SQLEXPRESS", "BRC_Hungary_Test", "BRCHungaryUserTest", "Qw52267660", "BRC_EH_Test");
-            SqlConnection connection = sqlManager.Connect();
-            dt = sqlManager.ExecuteQuery("select * from View_DropDowns ORDER BY 1,2,3");
+                    if (! dropDownIDsbyType[colName].Keys.Contains(cellValue))
+                    {
+                        dropDownIDsbyType[colName].Add(cellValue, 0);
+                    }
+                }
+            }
 
+            // dropdown oszlopok típusa alapján kódok kigyűjtése
+            string sqlParams = "";
 
+            foreach (string colName in dropDownIDsbyType.Keys)
+            {
+                Dictionary<string, int> sqlColNames = dropDownIDsbyType[colName];
+                string[] array = sqlColNames.Keys.ToArray() as string[];
 
+                if(array != null && array.Length > 0)
+                {
+                    for (int i = 0; i < array.Length; i++)
+                    {
+                        array[i] = String.Format("'{0}'", array[i]);
+                    }
+
+                    sqlParams = String.Join(",", array);
+                    string sqlCmd = String.Format("SELECT * FROM View_DropDowns Where ExcelColNames='{0}' AND DropDownValue IN ({1})", colName, sqlParams);
+                    dt = sqlManager.ExecuteQuery(sqlCmd);
+                }
+
+            }
 
             sqlManager.Disconnect();
-
-            rows_returned = dt.Rows.Count;
-
-            // dt -> List class
-            ExcelValidator.loadDropdownList.Clear();
-
-
+            ExcelManager.CloseExcel();
             Assert.IsTrue(true);
-
         }
 
-
-        [TestMethod]
-        public void TestLoadDropdownValues()
-        {
-            bool isOk = ExcelValidator.LoadDropdownValuesFromTextFiles("C:\\Merkit\\BRC_EnterHungary\\Textfiles");
-            Assert.IsTrue(isOk);
-        }
 
         [TestMethod]
         public void TestExcelHeaderValidator()

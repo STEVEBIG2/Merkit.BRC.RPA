@@ -190,23 +190,7 @@ namespace Merkit.BRC.RPA
         /// <returns></returns>
         public static bool LoadDropdownValuesFromSQL(MSSQLManager sqlManager)
         {
-            loadDropdownDict.Clear();
 
-            string[] dropdownType = {
-                "állampolgárság", "átvételi ország", "benyújtó", "családi állapot", "egészségbiztosítás",
-                "előző ország", "FEOR", "iskolai végzettség", "munkakör iskolai végzettség", "munkáltató közterület jellege",
-                "nem", "nemzetiség", "nyelv", "pénznem", "szállás emelet",
-                "szállás közterület jellege", "szállás tartózkodási jogcíme", "szül_ország", "TEÁOR", "továbbut ország",
-                "útlevél tipus", "zipcode"
-            };
-
-            foreach (string type in dropdownType)
-            {
-                loadDropdownDict.Add(
-                    String.Format("{0}_dropdown", type.Replace(" ", "_")),
-                    FileManager.ReadTextFile(Path.Combine(path, type + ".txt"))
-                    );
-            }
 
             return true;
         }
