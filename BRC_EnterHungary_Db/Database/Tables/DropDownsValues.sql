@@ -1,4 +1,4 @@
-﻿-- DropDownTypes sorok 
+﻿-- DropDownTypes sorok
 SET NOCOUNT ON
 go
 

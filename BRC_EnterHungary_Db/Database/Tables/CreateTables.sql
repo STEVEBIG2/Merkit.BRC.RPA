@@ -1,4 +1,4 @@
--- Use BRC_Hungary_Test
+-- Use BRC_Hungary_Test 
 -- GO
 
 -- DROP TABLE ExcelRows
@@ -56,7 +56,7 @@ GO
 
 CREATE TABLE DropDownsValues
 (
-	DropDownsValuesId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	DropDownsValueId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	DropDownTypeId INT NOT NULL,
 	DropDownValue VARCHAR(100) NOT NULL,
 	Deleted INT NOT NULL DEFAULT 0
@@ -79,7 +79,7 @@ ALTER TABLE DropDownsValues CHECK CONSTRAINT FK_DropDownsValues_DropDownTypes
 GO
 
 CREATE VIEW View_DropDowns AS
-SELECT dt.DropDownTypeId, dt.DropDownName, dt.ExcelColNames, dv.DropDownsValuesId, dv.DropDownValue
+SELECT dt.DropDownTypeId, dt.DropDownName, dt.ExcelColNames, dv.DropDownsValueId, dv.DropDownValue
   FROM DropDownsValues dv INNER JOIN DropDownTypes dt ON (dv.DropDownTypeId=dt.DropDownTypeId AND dt.Deleted=0)
   WHERE dv.Deleted=0
 GO

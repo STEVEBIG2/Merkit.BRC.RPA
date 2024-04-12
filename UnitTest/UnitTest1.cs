@@ -15,9 +15,14 @@ using System.Data.SqlClient;
 using System.Net;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.ComponentModel;
+using UnitTest;
 
 namespace UnitTestProject1
 {
+
     [TestClass]
     public class UnitTest1
     {
@@ -72,11 +77,12 @@ namespace UnitTestProject1
             System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
 
             //  ** dropdown oszlopok kigyűjtése kódlista készítéshez
+            Dictionary<string, List<string>> dropDownValuesbyType = new Dictionary<string, List<string>>();
             Dictionary<string, Dictionary<string, int>> dropDownIDsbyType = new Dictionary<string, Dictionary<string, int>>();
 
-            foreach(ExcelCol col in ExcelValidator.excelHeaders.Where(x => x.ColType == ExcelColTypeNum.Dropdown))
+            foreach (ExcelCol col in ExcelValidator.excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Dropdown))
             {
-                dropDownIDsbyType.Add(col.ColName, new Dictionary<string, int>());
+                dropDownValuesbyType.Add(col.ExcelColName, new List<string>());
             }
 
             string cellValue = "";
@@ -84,13 +90,13 @@ namespace UnitTestProject1
             // dropdown oszlopok típusa alapján kódlista készítése
             foreach(DataRow excelRow in dt.Rows)
             {
-                foreach (string colName in dropDownIDsbyType.Keys)
+                foreach (string colName in dropDownValuesbyType.Keys)
                 {
                     cellValue = excelRow[colName].ToString();
 
-                    if (! dropDownIDsbyType[colName].Keys.Contains(cellValue))
+                    if (! dropDownValuesbyType[colName].Contains(cellValue))
                     {
-                        dropDownIDsbyType[colName].Add(cellValue, 0);
+                        dropDownValuesbyType[colName].Add(cellValue);
                     }
                 }
             }
@@ -98,10 +104,12 @@ namespace UnitTestProject1
             // dropdown oszlopok típusa alapján kódok kigyűjtése
             string sqlParams = "";
 
-            foreach (string colName in dropDownIDsbyType.Keys)
+            foreach (string colName in dropDownValuesbyType.Keys)
             {
-                Dictionary<string, int> sqlColNames = dropDownIDsbyType[colName];
-                string[] array = sqlColNames.Keys.ToArray() as string[];
+                dropDownIDsbyType.Add(colName, new Dictionary<string, int>());
+
+                List<string> sqlColNames = dropDownValuesbyType[colName];
+                string[] array = sqlColNames.ToArray();
 
                 if(array != null && array.Length > 0)
                 {
@@ -111,14 +119,25 @@ namespace UnitTestProject1
                     }
 
                     sqlParams = String.Join(",", array);
-                    string sqlCmd = String.Format("SELECT * FROM View_DropDowns Where ExcelColNames='{0}' AND DropDownValue IN ({1})", colName, sqlParams);
+                    string sqlCmd = String.Format("SELECT * FROM View_DropDowns WHERE ExcelColNames='{0}' AND DropDownValue IN ({1})", colName, sqlParams);
                     dt = sqlManager.ExecuteQuery(sqlCmd);
+
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        dropDownIDsbyType[colName].Add(dr["DropDownValue"].ToString(), Int32.Parse(dr["DropDownsValueId"].ToString()));
+                    }
                 }
 
             }
 
             sqlManager.Disconnect();
             ExcelManager.CloseExcel();
+
+            // Write value to Json file
+            string path = @"C:\Munka\Log_UnitTest_{0}.txt";
+            var jsonLogFile = new JsonRepo<Dictionary<string, Dictionary<string, int>>>(String.Format(path, DateTime.Now.ToString("yyyyMMdd")));
+            jsonLogFile.Write(dropDownIDsbyType);
+
             Assert.IsTrue(true);
         }
 
