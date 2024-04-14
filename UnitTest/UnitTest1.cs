@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using UnitTest;
+using System.Data.SqlTypes;
 
 namespace UnitTestProject1
 {
@@ -66,6 +67,96 @@ namespace UnitTestProject1
             Assert.IsTrue(true);
         }
 
+        [TestMethod]
+        public void TestCreateExcelRowsSQLScripts()
+        {
+
+            int counter = 10;
+            string excelColName = "";
+            string sqlcolName = "";
+            string sqlType = "";
+            string sqlNotNull = "";
+            List<string> createColums = new List<string>();
+            List<string> createIndexes = new List<string>();
+            List<string> foreignKeys = new List<string>();
+            List<string> view1Colums = new List<string>(); // !!!
+            List<string> view2Colums = new List<string>(); // !!!
+
+            foreach (ExcelCol excelCol in ExcelValidator.excelHeaders.Where(x => !String.IsNullOrEmpty(x.SQLColName)))
+            {
+                excelColName = excelCol.ExcelColName; 
+                sqlcolName = excelCol.SQLColName;
+                sqlType = "???";
+                sqlNotNull = "";
+
+                switch (excelCol.ExcelColType)
+                {
+                    case ExcelColTypeNum.Text:
+                        sqlType = "VARCHAR(150)";
+                        break;
+                    case ExcelColTypeNum.Number:
+                        sqlType = "INT";
+                        break;
+                    case ExcelColTypeNum.Date:
+                        sqlType = "DATE";
+                        break;
+                    case ExcelColTypeNum.DateTime:
+                        sqlType = "DATE";
+                        break;
+                    case ExcelColTypeNum.Dropdown:
+                        sqlType = "INT";
+                        createIndexes.Add(String.Format("CREATE INDEX IX_ExcelRows_{0} ON ExcelRows({0})", sqlcolName));
+                        createIndexes.Add("GO");
+                        createIndexes.Add("");
+                        //
+                        foreignKeys.Add(String.Format("ALTER TABLE ExcelRows WITH CHECK ADD CONSTRAINT FK_ExcelRows_{0} FOREIGN KEY({0}) REFERENCES DropDownsValues(DropDownsValueId)", sqlcolName));
+                        foreignKeys.Add("GO");
+                        foreignKeys.Add("");
+                        foreignKeys.Add(String.Format("ALTER TABLE ExcelRows CHECK CONSTRAINT FK_ExcelRows_{0}", sqlcolName));
+                        foreignKeys.Add("GO");
+                        foreignKeys.Add("");
+                        break;
+                    case ExcelColTypeNum.YesNo:
+                        sqlType = "BIT";
+                        break;
+                    case ExcelColTypeNum.Link:
+                        sqlType = "VARCHAR(150)";
+                        break;
+                    default:
+                        break;
+                }
+
+                if(excelCol.ExcelColRequired == ExcelColRequiredNum.Yes)
+                {
+                    sqlNotNull = "NOT NULL";
+                }
+
+                createColums.Add(String.Format("{0} {1} {2}", sqlcolName, sqlType, sqlNotNull).Trim());
+
+                // view sor
+                if(excelCol.ExcelColType == ExcelColTypeNum.Dropdown)
+                {
+                    view1Colums.Add(String.Format("(SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.{0}) AS [{1}]", sqlcolName, excelColName));
+                    view2Colums.Add(String.Format("(SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.{0}) AS {0}", sqlcolName));
+                }
+                else
+                {
+                    view1Colums.Add(String.Format("r.{0} AS [{1}]", sqlcolName, excelColName));
+                    view2Colums.Add("r." + sqlcolName);
+                }
+
+            }
+
+            // scripts
+            string sqlScriptColumns = String.Join("," + Environment.NewLine, createColums);  // "\r\n"
+            string sqlScriptIndexes = String.Join(Environment.NewLine, createIndexes);
+            string sqlforeignKeys = String.Join(Environment.NewLine, foreignKeys);
+
+            string sqlView1Columns = String.Join("," + Environment.NewLine, view1Colums);
+            string sqlView2Columns = String.Join("," + Environment.NewLine, view2Colums);
+
+            Assert.IsTrue(true);
+        }
 
         [TestMethod]
         public void TestSqlQuery()

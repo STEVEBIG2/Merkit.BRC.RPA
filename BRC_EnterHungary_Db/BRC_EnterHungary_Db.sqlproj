@@ -68,5 +68,6 @@
     <Build Include="Database\StoredProcedures\ResetQStatusId.sql" />
     <Build Include="Database\StoredProcedures\SetAllStatusId.sql" />
     <Build Include="Database\Tables\DropDownsValues.sql" />
+    <Build Include="Database\EnableDiagramMaker.sql" />
   </ItemGroup>
 </Project>
