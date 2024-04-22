@@ -52,6 +52,23 @@ namespace Merkit.RPA.PA.Framework
         }
 
         /// <summary>
+        /// Get WorksheetNames
+        /// </summary>
+        /// <returns></returns>
+        public static List<string> WorksheetNames()
+        {
+            List<string> sheetNames = new List<string>();
+
+            foreach (Worksheet worksheet in ExcelManager.ExcelWorkbook.Sheets)
+            {
+                sheetNames.Add(worksheet.Name);
+            }
+
+            return sheetNames;
+        }
+
+
+        /// <summary>
         /// Select Worksheet By Name
         /// </summary>
         /// <param name="worksheetName"></param>
@@ -95,7 +112,6 @@ namespace Merkit.RPA.PA.Framework
                     System.Runtime.InteropServices.Marshal.ReleaseComObject(ExcelWorkbook);
                     ExcelWorkbook = null;
                 }
-
 
                 if (ExcelApp != null)
                 {

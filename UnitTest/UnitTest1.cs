@@ -30,7 +30,7 @@ namespace UnitTestProject1
         private const string PasswordName = "UiPath: Enter Hungary";
         private const string UserName = "istvan.nagy@merkit.hu";
         private const string Password = "Qw52267660";
-        private const string ExcelFleName = @"c:\Munka\x-10.xlsx";
+        private const string ExcelFleName = @"c:\Munka\Teszt_adatok.xlsx";
         // String.Format("Data Source={0};Initial Catalog={1};User Id={2};Password={3};Application Name={4};Connect Timeout={5};Encrypt=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False; MultipleActiveResultSets=True", in_Config.MsSqlHost, in_Config.MsSqlDatabase, userName, password, in_Config.AppCode, 30)
 
         [TestMethod]
@@ -159,7 +159,7 @@ namespace UnitTestProject1
         }
 
         [TestMethod]
-        public void TestSqlQuery()
+        public void TestSqlQuery_View_DropDowns()
         {
             MSSQLManager sqlManager = new MSSQLManager(@"STEVE-LAPTOP\SQLEXPRESS", "BRC_Hungary_Test", "BRCHungaryUserTest", "Qw52267660", "BRC_EH_Test");
             SqlConnection connection = sqlManager.Connect();
@@ -231,7 +231,6 @@ namespace UnitTestProject1
 
             Assert.IsTrue(true);
         }
-
 
         [TestMethod]
         public void TestExcelHeaderValidator()
