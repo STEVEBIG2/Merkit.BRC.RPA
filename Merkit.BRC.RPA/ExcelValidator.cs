@@ -78,6 +78,8 @@ namespace Merkit.BRC.RPA
         public static int excelColNum = 0;
 
         public static List<ExcelCol> excelHeaders = new List<ExcelCol>() {
+                // new ExcelCol(++excelColNum, "Ügyszám", ExcelColTypeNum.Text, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, "Ugyszam"),
+                new ExcelCol(++excelColNum, "Ellenőrzés Státusz", ExcelColTypeNum.None, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, ""),
                 // new ExcelCol(++excelColNum, "Munkavállaló: Azonosító", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Mv_Azonosito"),
                 new ExcelCol(++excelColNum, "Személy: Születési vezetéknév", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Szul_Vezeteknev"),
                 new ExcelCol(++excelColNum, "Személy: Születési keresztnév", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Szul_Keresztnev"),
@@ -165,10 +167,8 @@ namespace Merkit.BRC.RPA
                 new ExcelCol(++excelColNum, "Magyar nyelvismeret", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Magyar_nyelvismeret"),
                 new ExcelCol(++excelColNum, "Dolgozott-e korábban Magyarországon?", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Dolgozott_Magyarorszagon"),
                 // nem kellenek a forrás excelben, csak a resultban
-                new ExcelCol(++excelColNum, "Ügyszám", ExcelColTypeNum.Text, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, "Ugyszam"),
-                new ExcelCol(++excelColNum, "Feldolgozottsági Állapot", ExcelColTypeNum.Text, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, ""),
-                new ExcelCol(++excelColNum, "Ellenőrzés Státusz", ExcelColTypeNum.None, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, ""),
-                new ExcelCol(++excelColNum, "Fájl Feltöltés Státusz", ExcelColTypeNum.None, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, "")
+                // new ExcelCol(++excelColNum, "Feldolgozottsági Állapot", ExcelColTypeNum.Text, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, ""),
+                //new ExcelCol(++excelColNum, "Fájl Feltöltés Státusz", ExcelColTypeNum.None, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, "")
             };
 
         #endregion
@@ -224,27 +224,67 @@ namespace Merkit.BRC.RPA
         public static bool ExcelHeaderValidator(string excelFileName)
         {
             bool isOk = ExcelManager.OpenExcel(excelFileName);
-            List<string> sheetNames = ExcelManager.WorksheetNames();
 
-            bool isHeaderOk = true;
-            System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet, true);
-
-            foreach (ExcelCol fejlec in excelHeaders.OrderByDescending(x => x.ExcelColNum))
-            {
-                if (!dt.Columns.Contains(fejlec.ExcelColName))
-                {
-                    ExcelManager.InsertFirstColumn(fejlec.ExcelColName);
-                    ExcelManager.SetCellColor("A1", System.Drawing.Color.LightCoral);
-                    isHeaderOk = false;
-                }
-            }
-
+            // Excel megnyitása sikeres?
             if (isOk)
             {
+                List<string> sheetNames = ExcelManager.WorksheetNames();
+
+                // munkalapok feldolgozása
+                foreach (string sheetName in sheetNames)
+                {
+                    ExcelSheetHeaderValidator(sheetName);
+                }
+
                 ExcelManager.CloseExcel();
             }
 
-            return isOk && isHeaderOk;
+            return isOk;
+        }
+
+        /// <summary>
+        /// Excel Sheet Header Validator
+        /// </summary>
+        /// <param name="sheetName"></param>
+        /// <returns></returns>
+        public static bool ExcelSheetHeaderValidator(string sheetName)
+        {
+            // megadott munkalap beolvasása
+            ExcelManager.SelectWorksheetByName(sheetName);
+            bool isHeaderOk = true;
+            System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet, true);
+
+            // oszlopok meglétének ellenőrzése
+            foreach (ExcelCol fejlec in excelHeaders.OrderByDescending(x => x.ExcelColNum))
+            {
+                // nem létezik
+                if (!dt.Columns.Contains(fejlec.ExcelColName))
+                {
+                    ExcelManager.InsertFirstColumn(fejlec.ExcelColName);
+
+                    if (!fejlec.ExcelColRole.Equals(ExcelColRoleNum.CreateIfNoExists))
+                    {
+                        ExcelManager.SetCellColor("A1", System.Drawing.Color.LightCoral);
+                        isHeaderOk = false;
+                    }
+                    else
+                    {
+                        if (isHeaderOk)
+                        {
+                            ExcelManager.SetCellColor("A1", System.Drawing.Color.Khaki);
+                        }
+                    }
+                }
+            }
+
+            if (!isHeaderOk)
+            {
+                ExcelManager.ExcelSheet.Rows[1].Insert();
+                ExcelManager.SetCellValue("A1", "Hibás excel: hiányzó oszlopok. A hiányzó oszlopok világos korall színű fejléccel be lettek szúrva.");
+                ExcelManager.SetRangeColor("A1", "E1", System.Drawing.Color.Red);
+            }
+
+            return isHeaderOk;
         }
 
         /// <summary>
@@ -298,6 +338,7 @@ namespace Merkit.BRC.RPA
             string checkStatuscellName = dictExcelColumnNameToExcellCol["Ellenőrzés Státusz"];
             bool isRowOk = true;
             bool isGoodRow = false;
+            string checkStatus = "";
             int rowNum = 1;
 
             // összes sor 
@@ -305,36 +346,34 @@ namespace Merkit.BRC.RPA
             {
                 isRowOk = true;
                 rowNum++;
+                checkStatus = ExcelManager.GetDataRowValue(currentRow, "Ellenőrzés Státusz");
 
-                // feldolgozatlan sor?
-                if(String.IsNullOrEmpty(ExcelManager.GetDataRowValue(currentRow, "Feldolgozottsági Állapot")))
+                // nem ellenőrzött sor?
+                if (String.IsNullOrEmpty(checkStatus))
                 {
-                    // nem kihagyandó tétel?
-                    if (!ExcelManager.GetDataRowValue(currentRow, "Ellenőrzés Státusz").ToLower().Contains("pass"))
-                    {
-                        // Nőtlen v. hajadon -> Nőtlen/hajadon
-                        isRowOk = isRowOk && CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                    // Nőtlen v. hajadon -> Nőtlen/hajadon
+                    isRowOk = isRowOk && CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
-                        // kötelező szöveges oszlopok ellenőrzése
-                        isRowOk = isRowOk && AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                    // kötelező szöveges oszlopok ellenőrzése
+                    isRowOk = isRowOk && AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
-                        // *** Dátum átalakítás és ellenőrzés
-                        isRowOk = isRowOk && AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                    // Dátum átalakítás és ellenőrzés
+                    isRowOk = isRowOk && AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
+                    // legördülő értékek ellenőrzése
 
-                        // *** követ
-
-                        // Ellenőrzés státusz állítása
-                        ExcelManager.SetCellValue(checkStatuscellName + rowNum.ToString(), isRowOk ? "PASS" : "FAIL");
-                        isGoodRow = isGoodRow || isRowOk; // van legalább egy jó sor
-                    }
-                    else
-                    {
-                        isGoodRow = true;
-                    }
+                    // Ellenőrzés státusz állítása
+                    checkStatus = isRowOk ? "OK" : "Hibás";
+                    ExcelManager.SetCellValue(checkStatuscellName + rowNum.ToString(), checkStatus);
                 }
+                else
+                {
+                    isRowOk = checkStatus.ToLower().Equals("ok");
+                }
+
+                isGoodRow = isGoodRow || isRowOk; // van legalább egy jó sor
             }
-            
+
             ExcelManager.CloseExcel();
             return isGoodRow;
         }
