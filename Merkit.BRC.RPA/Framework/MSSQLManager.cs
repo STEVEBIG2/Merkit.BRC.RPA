@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
+using System.Reflection.Emit;
+using Merkit.RPA.PA.Framework;
 
 namespace Merkit.BRC.RPA
 {
@@ -70,6 +72,13 @@ namespace Merkit.BRC.RPA
             Connection = new SqlConnection(ConnenctionString);
             Connection.Open();
             return Connection;
+        }
+
+        public SqlConnection ConnectByConfig()
+        {
+            ConnenctionString = MakeConnenctionString(Config.MsSqlHost, Config.MsSqlDatabase, Config.MsSqlUserName, Config.MsSqlPassword, Config.AppName);
+            Connection = new SqlConnection(ConnenctionString);
+            return Connect();
         }
 
         public void Disconnect()

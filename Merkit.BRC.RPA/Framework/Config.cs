@@ -17,7 +17,14 @@ namespace Merkit.RPA.PA.Framework
         public static int LogLevel { get; set; }
         public static string LogFileName { get; set; }
         public static string NotifyEmail { get; set; }
-        public static string TextfilesFolder { get; set; }
+
+        public static string MsSqlHost { get; set; }
+        public static string MsSqlDatabase { get; set; }
+        public static string LocalWorkFolder { get; set; }
+        //
+        public static string MsSqlUserName { get; set; }
+        public static string MsSqlPassword { get; set; }
+
         public static bool DebugMode { get; set; }
         public static string DebugLogFileName { get; set; }
         public static int MaxProcessableItemCount { get; set; }
