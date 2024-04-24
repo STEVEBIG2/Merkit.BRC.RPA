@@ -1,9 +1,11 @@
 ﻿using CredentialManagement;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Merkit.RPA.PA.Framework;
 
 namespace Merkit.BRC.RPA
 {
@@ -16,7 +18,35 @@ namespace Merkit.BRC.RPA
         /// <returns></returns>
         public static string VersionInfo()
         {
-            return "0.4.23";
+            return "0.4.24";
+        }
+
+        public static void Logger(int currentLogLevel, string process, string logType, string tran, string tranID, string note)
+        {
+            // need log?
+            if (currentLogLevel <= Config.LogLevel)
+            {
+                string logFileFullname = String.Format(Config.LogFileName, DateTime.Today.ToString("yyyyMMdd"));
+                
+                // not exists log file?
+                if (!File.Exists(logFileFullname))
+                {
+                    // create new log file
+                    using (StreamWriter sw = File.CreateText(logFileFullname))
+                    {
+                        sw.WriteLine("Date,Time,Process,LogType,Tran,Item,Note");
+                    }
+                }
+                
+                // append to log file
+                using (StreamWriter sw = File.AppendText(logFileFullname))
+                {
+                    sw.WriteLine(String.Format(DateTime.Now.ToString("yyyy-MM-dd") + "," + DateTime.Now.ToString("HH:mm:ss") + ",{0},{1},{2},{3},{4}", process, logType, tran, tranID, note));
+                }
+                
+            }
+
+            return;
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Text.RegularExpressions;
 using Merkit.BRC.RPA;
 using Merkit.RPA.PA.Framework;
 using System.IO;
@@ -9,7 +10,6 @@ using System.Drawing;
 using Microsoft.Office.Interop.Excel;
 using System.Collections.Generic;
 using static System.Net.Mime.MediaTypeNames;
-using System.Text.RegularExpressions;
 using System.Reflection.Emit;
 using System.Data.SqlClient;
 using System.Net;
@@ -30,8 +30,41 @@ namespace UnitTestProject1
         private const string PasswordName = "UiPath: Enter Hungary";
         private const string UserName = "istvan.nagy@merkit.hu";
         private const string Password = "Qw52267660";
-        private const string ExcelFleName = @"c:\Munka\Teszt_adatok.xlsx";
+        private const string ExcelFileName = @"c:\Munka\Teszt_adatok.xlsx";
         // String.Format("Data Source={0};Initial Catalog={1};User Id={2};Password={3};Application Name={4};Connect Timeout={5};Encrypt=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False; MultipleActiveResultSets=True", in_Config.MsSqlHost, in_Config.MsSqlDatabase, userName, password, in_Config.AppCode, 30)
+
+        public void InitConfig()
+        {
+            Config.AppName = "app";
+            Config.LogLevel = 0;
+            Config.LogFileName = @"c:\Munka\log_{0}.txt";
+        }
+
+        [TestMethod]
+        public void TestRegex()
+        {
+            string result = "";
+            string pattern = "";
+
+            string yearPattern = @"(19|20)\d{2}";
+            string monthPattern = @"(0[1-9]|1[1,2])";
+            string dayPattern = @"(0[1-9]|[12][0-9]|3[01])";
+            string separator = @"(\/|-)";
+
+            pattern = yearPattern + separator + monthPattern + separator +dayPattern;
+            pattern = dayPattern + separator + monthPattern + separator + yearPattern;
+            //pattern = yearPattern + separator + monthPattern + separator + dayPattern;
+
+            string input = @"25-07-2023";
+            RegexOptions options = RegexOptions.Multiline;
+
+            foreach (Match m in Regex.Matches(input, pattern, options))
+            {
+                result = String.Format("'{0}' found at index {1}.", m.Value, m.Index);
+            }
+
+            Assert.IsTrue(true);
+        }
 
         [TestMethod]
         public void TestBankHolidays()
@@ -164,7 +197,7 @@ namespace UnitTestProject1
             MSSQLManager sqlManager = new MSSQLManager(@"STEVE-LAPTOP\SQLEXPRESS", "BRC_Hungary_Test", "BRCHungaryUserTest", "Qw52267660", "BRC_EH_Test");
             SqlConnection connection = sqlManager.Connect();
 
-            bool isOk = ExcelManager.OpenExcel(ExcelFleName);
+            bool isOk = ExcelManager.OpenExcel(ExcelFileName);
             System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
 
             //  ** dropdown oszlopok kigyűjtése kódlista készítéshez
@@ -233,16 +266,10 @@ namespace UnitTestProject1
         }
 
         [TestMethod]
-        public void TestExcelHeaderValidator()
+        public void TestExcelWorkbookValidator()
         {
-            bool isOk = ExcelValidator.ExcelHeaderValidator(ExcelFleName);
-            Assert.IsTrue(isOk);
-        }
-
-        [TestMethod]
-        public void TestExcelRowsValidator()
-        {
-            bool isOk = ExcelValidator.ExcelRowsValidator(ExcelFleName);
+            InitConfig();
+            bool isOk = ExcelValidator.ExcelWorkbookValidator(ExcelFileName);
             Assert.IsTrue(isOk);
         }
 

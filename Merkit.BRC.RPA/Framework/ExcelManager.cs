@@ -144,6 +144,7 @@ namespace Merkit.RPA.PA.Framework
         public static void SetCellValue(int row, int col, object value)
         {
             ExcelSheet.Cells[row, col].Value = value;
+            ExcelSheet.Cells[row, col].NumberFormat = "@";
             return;
         }
 

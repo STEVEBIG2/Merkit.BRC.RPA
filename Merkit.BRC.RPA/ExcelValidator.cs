@@ -217,12 +217,14 @@ namespace Merkit.BRC.RPA
         }
 
         /// <summary>
-        /// Excel Header Validator
+        /// Excel Workbook Validator
         /// </summary>
         /// <param name="excelFileName"></param>
         /// <returns></returns>
-        public static bool ExcelHeaderValidator(string excelFileName)
+        public static bool ExcelWorkbookValidator(string excelFileName)
         {
+            Framework.Logger(0, "ExcelHeaderValidator", "Info", "", "-", String.Format("{0} file ellenőrzése elkezdődött.", excelFileName));
+            Dictionary<string, bool> excelSheetHeaderChecking = new Dictionary<string, bool>();
             bool isOk = ExcelManager.OpenExcel(excelFileName);
 
             // Excel megnyitása sikeres?
@@ -230,13 +232,28 @@ namespace Merkit.BRC.RPA
             {
                 List<string> sheetNames = ExcelManager.WorksheetNames();
 
-                // munkalapok feldolgozása
+                // munkalapok fejléceinek ellenőrzése
                 foreach (string sheetName in sheetNames)
                 {
-                    ExcelSheetHeaderValidator(sheetName);
+                    // EH adatokat tartalmazhat?
+                    if (!sheetName.Contains("Referen"))
+                    {
+                        excelSheetHeaderChecking.Add(sheetName, ExcelSheetHeaderValidator(sheetName));
+                    }
+                }
+
+                // munkalapok sorainak ellenőrzése
+                foreach(KeyValuePair<string, bool> goodSheetNameItem in excelSheetHeaderChecking.Where(x => x.Value))
+                {
+                    ExcelSheetRowsValidator(goodSheetNameItem.Key);
                 }
 
                 ExcelManager.CloseExcel();
+                Framework.Logger(0, "ExcelHeaderValidator", "Info", "", "-", String.Format("{0} file ellenőrzése sikeresen befejeződött.", excelFileName));
+            }
+            else
+            {
+                Framework.Logger(0, "ExcelHeaderValidator", "Err", "", "-", String.Format("{0} file ellenőrzése sikertelen volt.", excelFileName));
             }
 
             return isOk;
@@ -249,6 +266,7 @@ namespace Merkit.BRC.RPA
         /// <returns></returns>
         public static bool ExcelSheetHeaderValidator(string sheetName)
         {
+            Framework.Logger(0, "ExcelSheetHeaderValidator", "Info", "", "-", String.Format("A(z) {0} munkalap fejléc ellenőrzése elkezdődött.", sheetName));
             // megadott munkalap beolvasása
             ExcelManager.SelectWorksheetByName(sheetName);
             bool isHeaderOk = true;
@@ -260,17 +278,19 @@ namespace Merkit.BRC.RPA
                 // nem létezik
                 if (!dt.Columns.Contains(fejlec.ExcelColName))
                 {
-                    ExcelManager.InsertFirstColumn(fejlec.ExcelColName);
 
                     if (!fejlec.ExcelColRole.Equals(ExcelColRoleNum.CreateIfNoExists))
                     {
+                        ExcelManager.InsertFirstColumn(fejlec.ExcelColName);
+                        Framework.Logger(0, "ExcelSheetHeaderValidator", "Err", "", "-", String.Format("Hiányzó oszlop a(z) {0} munkalapon : {1}", sheetName, fejlec.ExcelColName));
                         ExcelManager.SetCellColor("A1", System.Drawing.Color.LightCoral);
                         isHeaderOk = false;
                     }
                     else
                     {
-                        if (isHeaderOk)
+                        if(isHeaderOk)
                         {
+                            ExcelManager.InsertFirstColumn(fejlec.ExcelColName);
                             ExcelManager.SetCellColor("A1", System.Drawing.Color.Khaki);
                         }
                     }
@@ -284,6 +304,7 @@ namespace Merkit.BRC.RPA
                 ExcelManager.SetRangeColor("A1", "E1", System.Drawing.Color.Red);
             }
 
+            Framework.Logger(0, "A(z) ExcelSheetHeaderValidator", "Info", "", "-", String.Format("{0} munkalap fejléc ellenőrzése befejeződött.", sheetName));
             return isHeaderOk;
         }
 
@@ -292,7 +313,7 @@ namespace Merkit.BRC.RPA
         /// </summary>
         /// <param name="excelFileName"></param>
         /// <returns></returns>
-        public static bool ExcelRowsValidator(string excelFileName)
+        public static bool ExcelSheetRowsValidator(string sheetName)
         {
             Dictionary<string, bool> oszlopok_dictionary = new Dictionary<string, bool>() {
                 {"Foglalkoztatóval kötött megállapodás kelte",true},
@@ -332,7 +353,10 @@ namespace Merkit.BRC.RPA
                 {"Munkavállaló: HRSZ",true}
             };
 
-            bool isOk = ExcelManager.OpenExcel(excelFileName);
+            Framework.Logger(0, "ExcelSheetRowsValidator", "Info", "", "-", String.Format("A(z) {0} munkalap sorainak ellenőrzése elkezdődött.", sheetName));
+
+            // megadott munkalap beolvasása
+            ExcelManager.SelectWorksheetByName(sheetName);
             System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
             Dictionary<string, string> dictExcelColumnNameToExcellCol = ExcelManager.GetExcelColumnNamesByDataTable(dt);
             string checkStatuscellName = dictExcelColumnNameToExcellCol["Ellenőrzés Státusz"];
@@ -365,6 +389,7 @@ namespace Merkit.BRC.RPA
                     // Ellenőrzés státusz állítása
                     checkStatus = isRowOk ? "OK" : "Hibás";
                     ExcelManager.SetCellValue(checkStatuscellName + rowNum.ToString(), checkStatus);
+                    //  var x = ExcelSheet.get_Range("C2").Style;
                 }
                 else
                 {
@@ -374,7 +399,7 @@ namespace Merkit.BRC.RPA
                 isGoodRow = isGoodRow || isRowOk; // van legalább egy jó sor
             }
 
-            ExcelManager.CloseExcel();
+            Framework.Logger(0, "ExcelSheetRowsValidator", "Info", "", "-", String.Format("A(z) {0} munkalap sorainak ellenőrzése befejeződött .", sheetName));
             return isGoodRow;
         }
 
@@ -463,14 +488,18 @@ namespace Merkit.BRC.RPA
         /// <param name="datumHeaderek"></param>
         private static bool AllDateCheckAndConvert(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
         {
+            string cellValue = "";
+            string cellName = "";
+            DateTime dateTime = DateTime.MinValue;
             bool isCellValueOk = true;
 
             // dátum oszlopokon végigmenni
             foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Date))
             {
-                DateTime dateTime = DateTime.MinValue;
-                string cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
-                string cellName = fieldList[col.ExcelColName] + rowNum.ToString();
+                dateTime = DateTime.MinValue;
+                cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
+                cellValue = cellValue.Length > 10 ? cellValue.Substring(0, 10) : cellValue;
+                cellName = fieldList[col.ExcelColName] + rowNum.ToString();
 
                 // van érték?
                 if (cellValue.Length > 0)
@@ -497,6 +526,12 @@ namespace Merkit.BRC.RPA
                 {
                     // lehet üres?
                     isCellValueOk = col.ExcelColRequired == ExcelColRequiredNum.No;
+                }
+
+                // hibás dátum?
+                if (! isCellValueOk)
+                {
+                    ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                 }
             }
 
