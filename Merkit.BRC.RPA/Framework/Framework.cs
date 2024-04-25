@@ -18,9 +18,18 @@ namespace Merkit.BRC.RPA
         /// <returns></returns>
         public static string VersionInfo()
         {
-            return "0.4.24";
+            return "0.4.25";
         }
 
+        /// <summary>
+        /// Logger
+        /// </summary>
+        /// <param name="currentLogLevel"></param>
+        /// <param name="process"></param>
+        /// <param name="logType"></param>
+        /// <param name="tran"></param>
+        /// <param name="tranID"></param>
+        /// <param name="note"></param>
         public static void Logger(int currentLogLevel, string process, string logType, string tran, string tranID, string note)
         {
             // need log?

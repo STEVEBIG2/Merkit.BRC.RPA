@@ -35,9 +35,14 @@ namespace UnitTestProject1
 
         public void InitConfig()
         {
-            Config.AppName = "app";
+            Config.AppName = "UnitTest";
             Config.LogLevel = 0;
             Config.LogFileName = @"c:\Munka\log_{0}.txt";
+            //
+            Config.MsSqlHost = @"STEVE-LAPTOP\SQLEXPRESS";
+            Config.MsSqlDatabase = "BRC_Hungary_Test";
+            Config.MsSqlUserName = "BRCHungaryUserTest";
+            Config.MsSqlPassword = "Qw52267660";  
         }
 
         [TestMethod]
@@ -51,7 +56,7 @@ namespace UnitTestProject1
             string dayPattern = @"(0[1-9]|[12][0-9]|3[01])";
             string separator = @"(\/|-)";
 
-            pattern = yearPattern + separator + monthPattern + separator +dayPattern;
+            pattern = yearPattern + separator + monthPattern + separator + dayPattern;
             pattern = dayPattern + separator + monthPattern + separator + yearPattern;
             //pattern = yearPattern + separator + monthPattern + separator + dayPattern;
 
@@ -84,11 +89,11 @@ namespace UnitTestProject1
 
             // *** put it into function
             string monthDay = dt.ToString("MMdd");
-            bool isWorkDay = ! (dt.DayOfWeek == DayOfWeek.Saturday || dt.DayOfWeek == DayOfWeek.Sunday) ;
+            bool isWorkDay = !(dt.DayOfWeek == DayOfWeek.Saturday || dt.DayOfWeek == DayOfWeek.Sunday);
 
             if (isWorkDay)
             {
-                isWorkDay = isWorkDay && ! extraDaysOff.Contains(monthDay);
+                isWorkDay = isWorkDay && !extraDaysOff.Contains(monthDay);
             }
             else
             {
@@ -98,6 +103,14 @@ namespace UnitTestProject1
             // return isWorkDay;
 
             Assert.IsTrue(true);
+        }
+
+        [TestMethod]
+        public void TestMainProcess()
+        {
+            InitConfig();
+            bool isOk = ExcelValidator.MainProcess();
+            Assert.IsTrue(isOk);
         }
 
         [TestMethod]

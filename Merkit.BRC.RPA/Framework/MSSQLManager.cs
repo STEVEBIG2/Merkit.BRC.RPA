@@ -51,22 +51,45 @@ namespace Merkit.BRC.RPA
 
         #region "Public region"
 
+        /// <summary>
+        /// Constructor without parameters
+        /// </summary>
         public MSSQLManager()
         {
-
         }
 
+        /// <summary>
+        /// Constructor with parameters
+        /// </summary>
+        /// <param name="msSqlHost"></param>
+        /// <param name="msSqlDatabase"></param>
+        /// <param name="userName"></param>
+        /// <param name="password"></param>
+        /// <param name="appCode"></param>
         public MSSQLManager(string msSqlHost, string msSqlDatabase, string userName, string password, string appCode)
         {
             ConnenctionString = MakeConnenctionString(msSqlHost, msSqlDatabase, userName, password, appCode);
         }
 
+        /// <summary>
+        /// Make Connenction String
+        /// </summary>
+        /// <param name="msSqlHost"></param>
+        /// <param name="msSqlDatabase"></param>
+        /// <param name="userName"></param>
+        /// <param name="password"></param>
+        /// <param name="appCode"></param>
+        /// <returns></returns>
         public string MakeConnenctionString(string msSqlHost, string msSqlDatabase, string userName, string password, string appCode)
         {
             string conStr = String.Format("Data Source={0};Initial Catalog={1};User Id={2};Password={3};Application Name={4};Connect Timeout={5};Encrypt=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False; MultipleActiveResultSets=True", msSqlHost, msSqlDatabase, userName, password, appCode, 30);
             return conStr;
         }
 
+        /// <summary>
+        /// Connect
+        /// </summary>
+        /// <returns></returns>
         public SqlConnection Connect()
         {
             Connection = new SqlConnection(ConnenctionString);
@@ -74,6 +97,10 @@ namespace Merkit.BRC.RPA
             return Connection;
         }
 
+        /// <summary>
+        /// Connect By Config
+        /// </summary>
+        /// <returns></returns>
         public SqlConnection ConnectByConfig()
         {
             ConnenctionString = MakeConnenctionString(Config.MsSqlHost, Config.MsSqlDatabase, Config.MsSqlUserName, Config.MsSqlPassword, Config.AppName);
@@ -81,15 +108,29 @@ namespace Merkit.BRC.RPA
             return Connect();
         }
 
+        /// <summary>
+        /// Disconnect
+        /// </summary>
         public void Disconnect()
         {
             //con.Shutdown();
-            Connection.Close();
+
+            if (Connection.State != ConnectionState.Closed)
+            {
+                Connection.Close();
+            }
+
             Connection = null;  
             //Connection.Dispose();
             return;
         }
 
+        /// <summary>
+        /// Execute Scalar
+        /// </summary>
+        /// <param name="statement"></param>
+        /// <param name="arguments"></param>
+        /// <returns></returns>
         public object ExecuteScalar(string statement, Dictionary<string, object> arguments)
         {
             object retvalue = null;
@@ -112,6 +153,14 @@ namespace Merkit.BRC.RPA
             return retvalue;
         }
 
+        /// <summary>
+        /// ExecuteQuery
+        /// </summary>
+        /// <param name="statement"></param>
+        /// <param name="arguments"></param>
+        /// <param name="commandType"></param>
+        /// <param name="tr"></param>
+        /// <returns></returns>
         public DataTable ExecuteQuery(string statement, Dictionary<string, object> arguments = null, CommandType commandType = CommandType.Text, SqlTransaction tr = null)
         {
             DataTable retvalue = new DataTable();

@@ -9,9 +9,22 @@ using System.Data;
 using System.Diagnostics.Eventing.Reader;
 using Microsoft.Office.Interop.Excel;
 using Merkit.BRC.RPA;
+using System.Data.SqlClient;
 
 namespace Merkit.BRC.RPA
 {
+    public enum QStatusNum
+    {
+        Locked = -1,
+        New = 0,
+        InProgress = 1,
+        Failed = 2,
+        SuccessFullExcel = 3,
+        SuccessFullRow = 4,
+        Exported = 5,
+        Deleted = 6
+    };
+
     public enum ExcelColTypeNum
     {
         None = 0,
@@ -72,7 +85,8 @@ namespace Merkit.BRC.RPA
 
         public static string TextFilePath { get; set; }
 
-        public static Dictionary<string, string> loadDropdownDict = new Dictionary<string, string>();
+        //public static Dictionary<string, string> loadDropdownDict = new Dictionary<string, string>();
+        public static Dictionary<string, string> enterHungaryLogins = new Dictionary<string, string>();
         public static Dictionary<string, List<string>> loadDropdownList = new Dictionary<string, List<string>>();
 
         public static int excelColNum = 0;
@@ -176,31 +190,33 @@ namespace Merkit.BRC.RPA
         #region Public függvények
 
         /// <summary>
-        /// Az oldalon lévő, a flowhoz szükséges dropdown elemek értékeit  betölti a  lementett txt fájlokból
+        /// Main Process
         /// </summary>
-        /// <param name="path"></param>
         /// <returns></returns>
-        public static bool DEADCODE__LoadDropdownValuesFromTextFiles(string path)
+        public static bool MainProcess()
         {
-            loadDropdownDict.Clear();
+            bool processOk = false;            
+            MSSQLManager sqlManager = new MSSQLManager();
+            sqlManager.ConnectByConfig();
 
-            string[] dropdownType = {
-                "állampolgárság", "átvételi ország", "benyújtó", "családi állapot", "egészségbiztosítás",
-                "előző ország", "FEOR", "iskolai végzettség", "munkakör iskolai végzettség", "munkáltató közterület jellege",
-                "nem", "nemzetiség", "nyelv", "pénznem", "szállás emelet",
-                "szállás közterület jellege", "szállás tartózkodási jogcíme", "szül_ország", "TEÁOR", "továbbut ország",
-                "útlevél tipus", "zipcode"
-            };
-
-            foreach (string type in dropdownType)
+            try
             {
-                loadDropdownDict.Add(
-                    String.Format("{0}_dropdown", type.Replace(" ", "_")),
-                    FileManager.ReadTextFile(Path.Combine(path, type + ".txt"))
-                    );
+                GetEnterHungaryLogins(sqlManager);
+
+                // kész
+                processOk = true;
+            }
+            catch (Exception ex)
+            {
+                Framework.Logger(0, "MainProcess", "Err", "", "-", String.Format("MainProcess hiba: {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                sqlManager.Disconnect();
             }
 
-            return true;
+            return processOk;
         }
 
 
@@ -429,6 +445,23 @@ namespace Merkit.BRC.RPA
         #endregion
 
         #region Private függvények (oszloponkénti ellenőrzések)
+
+        /// <summary>
+        /// GetEnterHungaryLogins
+        /// </summary>
+        /// <param name="sqlManager"></param>
+        /// <returns></returns>
+        private static void GetEnterHungaryLogins(MSSQLManager sqlManager)
+        {
+            System.Data.DataTable dt = sqlManager.ExecuteQuery("SELECT Email, PasswordText FROM EnterHungaryLogins WHERE DELETED=0");
+
+            foreach (DataRow row in dt.Rows)
+            {
+                enterHungaryLogins.Add(row[0].ToString(), row[1].ToString());
+            }
+
+            return;
+        }
 
         /// <summary>
         /// CsaladiAllapot
