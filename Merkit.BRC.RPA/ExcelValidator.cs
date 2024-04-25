@@ -83,11 +83,11 @@ namespace Merkit.BRC.RPA
     {
         #region public változók
 
-        public static string TextFilePath { get; set; }
+        public static Dictionary<string, string> enterHungaryLogins = new Dictionary<string, string>(); // ügyintézők
 
-        //public static Dictionary<string, string> loadDropdownDict = new Dictionary<string, string>();
-        public static Dictionary<string, string> enterHungaryLogins = new Dictionary<string, string>();
-        public static Dictionary<string, List<string>> loadDropdownList = new Dictionary<string, List<string>>();
+        //  ** dropdown oszlopok kigyűjtése kódlista készítéshez
+        public static Dictionary<string, List<string>> dropDownValuesbyType = new Dictionary<string, List<string>>();
+        public static Dictionary<string, Dictionary<string, int>> dropDownIDsbyType = new Dictionary<string, Dictionary<string, int>>();
 
         public static int excelColNum = 0;
 
@@ -193,7 +193,7 @@ namespace Merkit.BRC.RPA
         /// Main Process
         /// </summary>
         /// <returns></returns>
-        public static bool MainProcess()
+        public static bool MainProcess(string excelFileName)
         {
             bool processOk = false;            
             MSSQLManager sqlManager = new MSSQLManager();
@@ -201,10 +201,17 @@ namespace Merkit.BRC.RPA
 
             try
             {
+                // ügyintéző login adatok begyűjtése
                 GetEnterHungaryLogins(sqlManager);
 
+                // *** dropdown lista ellenőrzéshez előkészülés
+                foreach (ExcelCol col in ExcelValidator.excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Dropdown))
+                {
+                    dropDownValuesbyType.Add(col.ExcelColName, new List<string>());
+                }
+
                 // kész
-                processOk = true;
+                processOk = ExcelWorkbookValidator(excelFileName, sqlManager);
             }
             catch (Exception ex)
             {
@@ -219,25 +226,12 @@ namespace Merkit.BRC.RPA
             return processOk;
         }
 
-
-        /// <summary>
-        /// Az oldalon lévő, a flowhoz szükséges dropdown elemek értékeit betölti SQL-bők
-        /// </summary>
-        /// <param name="sqlManager"></param>
-        /// <returns></returns>
-        public static bool LoadDropdownValuesFromSQL(MSSQLManager sqlManager)
-        {
-
-
-            return true;
-        }
-
         /// <summary>
         /// Excel Workbook Validator
         /// </summary>
         /// <param name="excelFileName"></param>
         /// <returns></returns>
-        public static bool ExcelWorkbookValidator(string excelFileName)
+        public static bool ExcelWorkbookValidator(string excelFileName, MSSQLManager sqlManager)
         {
             Framework.Logger(0, "ExcelHeaderValidator", "Info", "", "-", String.Format("{0} file ellenőrzése elkezdődött.", excelFileName));
             Dictionary<string, bool> excelSheetHeaderChecking = new Dictionary<string, bool>();
@@ -254,14 +248,14 @@ namespace Merkit.BRC.RPA
                     // EH adatokat tartalmazhat?
                     if (!sheetName.Contains("Referen"))
                     {
-                        excelSheetHeaderChecking.Add(sheetName, ExcelSheetHeaderValidator(sheetName));
+                        excelSheetHeaderChecking.Add(sheetName, ExcelSheetHeaderValidator(sheetName, sqlManager));
                     }
                 }
 
                 // munkalapok sorainak ellenőrzése
                 foreach(KeyValuePair<string, bool> goodSheetNameItem in excelSheetHeaderChecking.Where(x => x.Value))
                 {
-                    ExcelSheetRowsValidator(goodSheetNameItem.Key);
+                    ExcelSheetRowsValidator(goodSheetNameItem.Key, sqlManager);
                 }
 
                 ExcelManager.CloseExcel();
@@ -280,7 +274,7 @@ namespace Merkit.BRC.RPA
         /// </summary>
         /// <param name="sheetName"></param>
         /// <returns></returns>
-        public static bool ExcelSheetHeaderValidator(string sheetName)
+        public static bool ExcelSheetHeaderValidator(string sheetName, MSSQLManager sqlManager)
         {
             Framework.Logger(0, "ExcelSheetHeaderValidator", "Info", "", "-", String.Format("A(z) {0} munkalap fejléc ellenőrzése elkezdődött.", sheetName));
             // megadott munkalap beolvasása
@@ -329,46 +323,8 @@ namespace Merkit.BRC.RPA
         /// </summary>
         /// <param name="excelFileName"></param>
         /// <returns></returns>
-        public static bool ExcelSheetRowsValidator(string sheetName)
+        public static bool ExcelSheetRowsValidator(string sheetName, MSSQLManager sqlManager)
         {
-            Dictionary<string, bool> oszlopok_dictionary = new Dictionary<string, bool>() {
-                {"Foglalkoztatóval kötött megállapodás kelte",true},
-                {"Személy: Tartózkodási engedély érvényessége",true},
-                {"Személy: Útlevél lejáratának dátuma",true},
-                {"Személy: Útlevél kiállításának dátuma",true},
-                {"Személy: Születési dátum",true},
-                {"Munkavállaló: Emelet",true},
-                {"Munkavégzési Emelet",true},
-                {"Munkavégzési közterület jellege",true},
-                {"Személy: Születési ország",true},
-                {"Személy: Neme",true},
-                {"Személy: Állampolgárság",true},
-                {"Személy: Családi állapot",true},
-                {"Iskolai végzettsége",true},
-                {"Útlevél típusa",true},
-                {"Munkavállaló: Irányítószám",true},
-                {"Munkavállaló: Közterület neve",true},
-                {"Tartózkodás jogcíme",true},
-                {"Egészségbiztosítás",true},
-                {"Visszautazási ország",true},
-                {"Érkezést megelőző ország",true},
-                {"Email cím",true},{"Benyújtó",true},
-                {"Átvételi ország",true},
-                {"Személy: Várható jövedelem",true},
-                {"Személy: Várható jövedelem pénznem",true},
-                {"Munkáltató irányítószám",true},
-                {"Munkáltató közterület jellege",true},
-                {"TEÁOR szám",true},
-                {"KSH-szám",true},
-                {"Munkáltató adószáma/adóazonosító jele",true},
-                {"Munkakörhöz szükséges iskolai végzettség",true},
-                {"Munkavégzési irányítószám",true},
-                {"Munkavállaló: FEOR",true},
-                {"Anyanyelve",true},
-                {"Munkavállaló: Házszám", true},
-                {"Munkavállaló: HRSZ",true}
-            };
-
             Framework.Logger(0, "ExcelSheetRowsValidator", "Info", "", "-", String.Format("A(z) {0} munkalap sorainak ellenőrzése elkezdődött.", sheetName));
 
             // megadott munkalap beolvasása
@@ -376,6 +332,9 @@ namespace Merkit.BRC.RPA
             System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
             Dictionary<string, string> dictExcelColumnNameToExcellCol = ExcelManager.GetExcelColumnNamesByDataTable(dt);
             string checkStatuscellName = dictExcelColumnNameToExcellCol["Ellenőrzés Státusz"];
+
+            LoadDropdownValuesFromSQL(sqlManager, dt);
+
             bool isRowOk = true;
             bool isGoodRow = false;
             string checkStatus = "";
@@ -394,6 +353,9 @@ namespace Merkit.BRC.RPA
                     // Nőtlen v. hajadon -> Nőtlen/hajadon
                     isRowOk = isRowOk && CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
+                    // ügyintéző ellenőrzése
+                    isRowOk = isRowOk && AdministratorChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
                     // kötelező szöveges oszlopok ellenőrzése
                     isRowOk = isRowOk && AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
@@ -401,6 +363,7 @@ namespace Merkit.BRC.RPA
                     isRowOk = isRowOk && AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
                     // legördülő értékek ellenőrzése
+                    isRowOk = isRowOk && AllDropdownCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
                     // Ellenőrzés státusz állítása
                     checkStatus = isRowOk ? "OK" : "Hibás";
@@ -442,6 +405,62 @@ namespace Merkit.BRC.RPA
             return colNum;
         }
 
+        /// <summary>
+        /// Az oldalon lévő, a flowhoz szükséges dropdown elemek értékeit betölti SQL-ből
+        /// </summary>
+        /// <param name="sqlManager"></param>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        public static bool LoadDropdownValuesFromSQL(MSSQLManager sqlManager, System.Data.DataTable dt)
+        {
+            string cellValue = "";
+
+            // dropdown oszlopok típusa alapján kódlista készítése
+            foreach (DataRow excelRow in dt.Rows)
+            {
+                foreach (string colName in dropDownValuesbyType.Keys)
+                {
+                    cellValue = excelRow[colName].ToString();
+
+                    if (!dropDownValuesbyType[colName].Contains(cellValue))
+                    {
+                        dropDownValuesbyType[colName].Add(cellValue);
+                    }
+                }
+            }
+
+            // dropdown oszlopok típusa alapján kódok kigyűjtése
+            string sqlParams = "";
+
+            foreach (string colName in dropDownValuesbyType.Keys)
+            {
+                dropDownIDsbyType.Add(colName, new Dictionary<string, int>());
+
+                List<string> sqlColNames = dropDownValuesbyType[colName];
+                string[] array = sqlColNames.ToArray();
+
+                if (array != null && array.Length > 0)
+                {
+                    for (int i = 0; i < array.Length; i++)
+                    {
+                        array[i] = String.Format("'{0}'", array[i]);
+                    }
+
+                    sqlParams = String.Join(",", array);
+                    string sqlCmd = String.Format("SELECT * FROM View_DropDowns WHERE ExcelColNames='{0}' AND DropDownValue IN ({1})", colName, sqlParams);
+                    dt = sqlManager.ExecuteQuery(sqlCmd);
+
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        dropDownIDsbyType[colName].Add(dr["DropDownValue"].ToString().ToLower(), Int32.Parse(dr["DropDownsValueId"].ToString()));
+                    }
+                }
+
+            }
+
+            return true;
+        }
+
         #endregion
 
         #region Private függvények (oszloponkénti ellenőrzések)
@@ -453,11 +472,11 @@ namespace Merkit.BRC.RPA
         /// <returns></returns>
         private static void GetEnterHungaryLogins(MSSQLManager sqlManager)
         {
-            System.Data.DataTable dt = sqlManager.ExecuteQuery("SELECT Email, PasswordText FROM EnterHungaryLogins WHERE DELETED=0");
+            System.Data.DataTable dt = sqlManager.ExecuteQuery("SELECT Email,PasswordText FROM EnterHungaryLogins WHERE Deleted=0");
 
             foreach (DataRow row in dt.Rows)
             {
-                enterHungaryLogins.Add(row[0].ToString(), row[1].ToString());
+                enterHungaryLogins.Add(row[0].ToString().ToLower(), row[1].ToString());
             }
 
             return;
@@ -482,6 +501,29 @@ namespace Merkit.BRC.RPA
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Check All Required Text Fields
+        /// </summary>
+        /// <param name="currentRow"></param>
+        /// <param name="rowNum"></param>
+        /// <param name="fieldList"></param>
+        /// <param name="datumHeaderek"></param>
+        private static bool AdministratorChecker(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
+        {
+            string colName = "Ügyintéző";
+            string cellValue = ExcelManager.GetDataRowValue(currentRow, colName).ToLower();
+            string cellName = fieldList[colName] + rowNum.ToString();
+            bool isCellValueOk = enterHungaryLogins.ContainsKey(cellValue);
+            
+            // ügyintéző létezik?
+            if (!isCellValueOk)
+            {
+                ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+            }
+
+            return isCellValueOk;
         }
 
         /// <summary>
@@ -569,6 +611,54 @@ namespace Merkit.BRC.RPA
             }
 
             return isCellValueOk;
+        }
+
+        /// <summary>
+        /// Check All Dropdown Fields
+        /// </summary>
+        /// <param name="currentRow"></param>
+        /// <param name="rowNum"></param>
+        /// <param name="fieldList"></param>
+        /// <param name="datumHeaderek"></param>
+        private static bool AllDropdownCheck(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
+        {
+            string cellValue = "";
+            string cellName = "";
+            DateTime dateTime = DateTime.MinValue;
+            bool isCellValuesOk = true;
+
+            // dátum oszlopokon végigmenni
+            foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Dropdown))
+            {
+                cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).Trim().ToLower();
+
+                // nem lehet üres vagy van érték?
+                if (! String.IsNullOrEmpty(cellValue) || col.ExcelColRequired.Equals(ExcelColRequiredNum.Yes))
+                {
+                    cellName = fieldList[col.ExcelColName] + rowNum.ToString();
+                    var temp = dropDownIDsbyType[col.ExcelColName];
+
+                    // létező érték?
+                    if (dropDownIDsbyType[col.ExcelColName].ContainsKey(cellValue))
+                    {
+                        // hibás érték?
+                        if (dropDownIDsbyType[col.ExcelColName][cellValue] <= 0)
+                        {
+                            ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                            isCellValuesOk = false;
+                        }
+
+                    }
+                    else
+                    {
+                        ExcelManager.SetCellColor(cellName, System.Drawing.Color.AliceBlue);
+                        isCellValuesOk = false;
+                    }
+                }
+
+            }
+
+            return isCellValuesOk;
         }
 
         #endregion

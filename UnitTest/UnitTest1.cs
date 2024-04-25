@@ -109,7 +109,7 @@ namespace UnitTestProject1
         public void TestMainProcess()
         {
             InitConfig();
-            bool isOk = ExcelValidator.MainProcess();
+            bool isOk = ExcelValidator.MainProcess(ExcelFileName);
             Assert.IsTrue(isOk);
         }
 
@@ -207,65 +207,21 @@ namespace UnitTestProject1
         [TestMethod]
         public void TestSqlQuery_View_DropDowns()
         {
-            MSSQLManager sqlManager = new MSSQLManager(@"STEVE-LAPTOP\SQLEXPRESS", "BRC_Hungary_Test", "BRCHungaryUserTest", "Qw52267660", "BRC_EH_Test");
-            SqlConnection connection = sqlManager.Connect();
-
-            bool isOk = ExcelManager.OpenExcel(ExcelFileName);
-            System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
-
-            //  ** dropdown oszlopok kigyűjtése kódlista készítéshez
-            Dictionary<string, List<string>> dropDownValuesbyType = new Dictionary<string, List<string>>();
-            Dictionary<string, Dictionary<string, int>> dropDownIDsbyType = new Dictionary<string, Dictionary<string, int>>();
+            InitConfig();
+            MSSQLManager sqlManager = new MSSQLManager();
+            sqlManager.ConnectByConfig();
 
             foreach (ExcelCol col in ExcelValidator.excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Dropdown))
             {
-                dropDownValuesbyType.Add(col.ExcelColName, new List<string>());
+                ExcelValidator.dropDownValuesbyType.Add(col.ExcelColName, new List<string>());
             }
 
-            string cellValue = "";
+            // ** aktuális munkalap ellenőrzése
+            bool isOk = ExcelManager.OpenExcel(ExcelFileName);
 
-            // dropdown oszlopok típusa alapján kódlista készítése
-            foreach(DataRow excelRow in dt.Rows)
-            {
-                foreach (string colName in dropDownValuesbyType.Keys)
-                {
-                    cellValue = excelRow[colName].ToString();
+            System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
 
-                    if (! dropDownValuesbyType[colName].Contains(cellValue))
-                    {
-                        dropDownValuesbyType[colName].Add(cellValue);
-                    }
-                }
-            }
-
-            // dropdown oszlopok típusa alapján kódok kigyűjtése
-            string sqlParams = "";
-
-            foreach (string colName in dropDownValuesbyType.Keys)
-            {
-                dropDownIDsbyType.Add(colName, new Dictionary<string, int>());
-
-                List<string> sqlColNames = dropDownValuesbyType[colName];
-                string[] array = sqlColNames.ToArray();
-
-                if(array != null && array.Length > 0)
-                {
-                    for (int i = 0; i < array.Length; i++)
-                    {
-                        array[i] = String.Format("'{0}'", array[i]);
-                    }
-
-                    sqlParams = String.Join(",", array);
-                    string sqlCmd = String.Format("SELECT * FROM View_DropDowns WHERE ExcelColNames='{0}' AND DropDownValue IN ({1})", colName, sqlParams);
-                    dt = sqlManager.ExecuteQuery(sqlCmd);
-
-                    foreach (DataRow dr in dt.Rows)
-                    {
-                        dropDownIDsbyType[colName].Add(dr["DropDownValue"].ToString(), Int32.Parse(dr["DropDownsValueId"].ToString()));
-                    }
-                }
-
-            }
+            ExcelValidator.LoadDropdownValuesFromSQL(sqlManager, dt);
 
             sqlManager.Disconnect();
             ExcelManager.CloseExcel();
@@ -273,7 +229,7 @@ namespace UnitTestProject1
             // Write value to Json file
             string path = @"C:\Munka\Log_UnitTest_{0}.txt";
             var jsonLogFile = new JsonRepo<Dictionary<string, Dictionary<string, int>>>(String.Format(path, DateTime.Now.ToString("yyyyMMdd")));
-            jsonLogFile.Write(dropDownIDsbyType);
+            jsonLogFile.Write(ExcelValidator.dropDownIDsbyType);
 
             Assert.IsTrue(true);
         }
@@ -282,7 +238,9 @@ namespace UnitTestProject1
         public void TestExcelWorkbookValidator()
         {
             InitConfig();
-            bool isOk = ExcelValidator.ExcelWorkbookValidator(ExcelFileName);
+            MSSQLManager sqlManager = new MSSQLManager();
+            sqlManager.ConnectByConfig();
+            bool isOk = ExcelValidator.ExcelWorkbookValidator(ExcelFileName, sqlManager);
             Assert.IsTrue(isOk);
         }
 
