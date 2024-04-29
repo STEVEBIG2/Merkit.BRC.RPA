@@ -10,6 +10,8 @@ using System.Diagnostics.Eventing.Reader;
 using Microsoft.Office.Interop.Excel;
 using Merkit.BRC.RPA;
 using System.Data.SqlClient;
+using System.Security.Policy;
+using System.Text.RegularExpressions;
 
 namespace Merkit.BRC.RPA
 {
@@ -50,6 +52,7 @@ namespace Merkit.BRC.RPA
         FutureDate = 2,
         ZipCode = 3,
         Regex = 4,
+        Link = 5,
         CreateIfNoExists = 99
     };
 
@@ -94,7 +97,6 @@ namespace Merkit.BRC.RPA
         public static List<ExcelCol> excelHeaders = new List<ExcelCol>() {
                 // new ExcelCol(++excelColNum, "Ügyszám", ExcelColTypeNum.Text, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, "Ugyszam"),
                 new ExcelCol(++excelColNum, "Ellenőrzés Státusz", ExcelColTypeNum.None, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, ""),
-                // new ExcelCol(++excelColNum, "Munkavállaló: Azonosító", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Mv_Azonosito"),
                 new ExcelCol(++excelColNum, "Személy: Születési vezetéknév", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Szul_Vezeteknev"),
                 new ExcelCol(++excelColNum, "Személy: Születési keresztnév", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Szul_Keresztnev"),
                 new ExcelCol(++excelColNum, "Személy: Útlevél száma/Személy ig.", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Utlevel_Szig"),
@@ -108,10 +110,8 @@ namespace Merkit.BRC.RPA
                 new ExcelCol(++excelColNum, "Személy: Anyja vezetékneve", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Anyja_Vezeteknev"),
                 new ExcelCol(++excelColNum, "Személy: Anyja keresztneve", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Anyja_Keresztnev"),
                 new ExcelCol(++excelColNum, "Személy: Neme", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Neme"),
-                new ExcelCol(++excelColNum, "Személy: Igazolványkép", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Igazolvanykep"),
                 new ExcelCol(++excelColNum, "Személy: Állampolgárság", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Allampolgarsag"),
                 new ExcelCol(++excelColNum, "Személy: Családi állapot", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Csaladi_allapot"),
-                new ExcelCol(++excelColNum, "Személy: Útlevél", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Utlevel"),
                 new ExcelCol(++excelColNum, "Személy: Magyarországra érkezést megelőző foglalkozás", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Sz_Magy_erk_meg_fogl"),
                 new ExcelCol(++excelColNum, "Személy: Útlevél kiállításának helye", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Utlevel_kiall_helye"),
                 new ExcelCol(++excelColNum, "Személy: Útlevél kiállításának dátuma", ExcelColTypeNum.Date, ExcelColRoleNum.PastDate, null, ExcelColRequiredNum.Yes, "Sz_Utlevel_kiall_datuma"),
@@ -123,7 +123,7 @@ namespace Merkit.BRC.RPA
                 new ExcelCol(++excelColNum, "Engedély hosszabbítás-e", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Engedely_hosszabbitas"),
                 new ExcelCol(++excelColNum, "Útlevél típusa",ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Utlevel_tipusa"),
                 new ExcelCol(++excelColNum, "Iskolai végzettsége", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Iskolai_vegzettsege"),
-                new ExcelCol(++excelColNum, "Munkavállaló: Irányítószám", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Mv_Iranyitoszam"),
+                new ExcelCol(++excelColNum, "Munkavállaló: Irányítószám", ExcelColTypeNum.Text, ExcelColRoleNum.ZipCode, null, ExcelColRequiredNum.Yes, "Mv_Iranyitoszam"),
                 new ExcelCol(++excelColNum, "Munkavállaló: Település", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Mv_Telepules"),
                 new ExcelCol(++excelColNum, "Munkavállaló: Közterület neve", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Mv_Kozterulet_neve"),
                 new ExcelCol(++excelColNum, "Munkavállaló: Közterület jellege", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Mv_Kozterulet_jellege"),
@@ -155,7 +155,7 @@ namespace Merkit.BRC.RPA
                 new ExcelCol(++excelColNum, "Átvételi ország", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Atveteli_orszag"),
                 new ExcelCol(++excelColNum, "Átvételi település", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Atveteli_telepules"),
                 new ExcelCol(++excelColNum, "Munkáltató rövid cégnév", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munk_rovid_cegnev"),
-                new ExcelCol(++excelColNum, "Munkáltató irányítószám", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munk_Iranyitoszam"),
+                new ExcelCol(++excelColNum, "Munkáltató irányítószám", ExcelColTypeNum.Text, ExcelColRoleNum.ZipCode, null, ExcelColRequiredNum.Yes, "Munk_Iranyitoszam"),
                 new ExcelCol(++excelColNum, "Munkáltató település", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munk_Telepules"),
                 new ExcelCol(++excelColNum, "Munkáltató közterület neve", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munk_kozt_neve"),
                 new ExcelCol(++excelColNum, "Munkáltató közterület jellege", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munk_kozt_jellege"),
@@ -167,7 +167,7 @@ namespace Merkit.BRC.RPA
                 new ExcelCol(++excelColNum, "Munkakörhöz szükséges iskolai végzettség", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munkakor_szuks_isk_vegz"),
                 new ExcelCol(++excelColNum, "Szakképzettsége", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Szakkepzettsege"),
                 new ExcelCol(++excelColNum, "Munkavégzés helye", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Mvegz_helye"),
-                new ExcelCol(++excelColNum, "Munkavégzési irányítószám", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Mvegz_iranyitoszam"),
+                new ExcelCol(++excelColNum, "Munkavégzési irányítószám", ExcelColTypeNum.Dropdown, ExcelColRoleNum.ZipCode, null, ExcelColRequiredNum.No, "Mvegz_iranyitoszam"),
                 new ExcelCol(++excelColNum, "Munkavégzési település", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Mvegz_telepules"),
                 new ExcelCol(++excelColNum, "Munkavégzési közterület neve", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Mvegz_kozt_neve"),
                 new ExcelCol(++excelColNum, "Munkavégzési közterület jellege", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Mvegz_kozt_jellege"),
@@ -180,6 +180,18 @@ namespace Merkit.BRC.RPA
                 new ExcelCol(++excelColNum, "Anyanyelve", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Anyanyelve"),
                 new ExcelCol(++excelColNum, "Magyar nyelvismeret", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Magyar_nyelvismeret"),
                 new ExcelCol(++excelColNum, "Dolgozott-e korábban Magyarországon?", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Dolgozott_Magyarorszagon"),
+                //
+                new ExcelCol(++excelColNum, "Érvényes útlevél teljes másolata", ExcelColTypeNum.Text, ExcelColRoleNum.Link, null, ExcelColRequiredNum.Yes, "Utlevel_link"),
+                new ExcelCol(++excelColNum, "Arckép", ExcelColTypeNum.Text, ExcelColRoleNum.Link, null, ExcelColRequiredNum.Yes, "Arckep_link"),
+                new ExcelCol(++excelColNum, "Lakásbérleti jogviszonyt igazoló lakásbérleti szerződés", ExcelColTypeNum.Text, ExcelColRoleNum.Link, null, ExcelColRequiredNum.Yes, "Lakasberlet_link"),
+                new ExcelCol(++excelColNum, "Lakás tulajdonjogát igazoló okirat", ExcelColTypeNum.Text, ExcelColRoleNum.Link, null, ExcelColRequiredNum.Yes, "Lakas_tulajdonjog_link"),
+                new ExcelCol(++excelColNum, "A foglalkoztatási jogviszony létesítésére irányuló előzetes megállapodás", ExcelColTypeNum.Text, ExcelColRoleNum.Link, null, ExcelColRequiredNum.Yes, "Elozetes_megallapodas_link"),
+                new ExcelCol(++excelColNum, "Céges meghatalmazás", ExcelColTypeNum.Text, ExcelColRoleNum.Link, null, ExcelColRequiredNum.Yes, "Ceges_megh_link"),
+                new ExcelCol(++excelColNum, "Szálláshely bejelentő lap", ExcelColTypeNum.Text, ExcelColRoleNum.Link, null, ExcelColRequiredNum.Yes, "Szallashely_bej_link"),
+                new ExcelCol(++excelColNum, "Postázási kérelem", ExcelColTypeNum.Text, ExcelColRoleNum.Link, null, ExcelColRequiredNum.Yes, "Postazasi_kerelem_link"),
+                new ExcelCol(++excelColNum, "Vízumfelvételi nyilatkozat", ExcelColTypeNum.Text, ExcelColRoleNum.Link, null, ExcelColRequiredNum.Yes, "Vizumfelv_ny_link"),
+                new ExcelCol(++excelColNum, "Kölcsönzési szerződés", ExcelColTypeNum.Text, ExcelColRoleNum.Link, null, ExcelColRequiredNum.Yes, "Kolcs_szerz_link")
+                // new ExcelCol(++excelColNum, "Munkavállaló: Azonosító", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Mv_Azonosito"),
                 // nem kellenek a forrás excelben, csak a resultban
                 // new ExcelCol(++excelColNum, "Feldolgozottsági Állapot", ExcelColTypeNum.Text, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, ""),
                 //new ExcelCol(++excelColNum, "Fájl Feltöltés Státusz", ExcelColTypeNum.None, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, "")
@@ -351,19 +363,25 @@ namespace Merkit.BRC.RPA
                 if (String.IsNullOrEmpty(checkStatus))
                 {
                     // Nőtlen v. hajadon -> Nőtlen/hajadon
-                    isRowOk = isRowOk && CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                    isRowOk = isRowOk & CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
                     // ügyintéző ellenőrzése
-                    isRowOk = isRowOk && AdministratorChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                    isRowOk = isRowOk & AdministratorChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
                     // kötelező szöveges oszlopok ellenőrzése
-                    isRowOk = isRowOk && AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                    isRowOk = isRowOk & AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
                     // Dátum átalakítás és ellenőrzés
-                    isRowOk = isRowOk && AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                    isRowOk = isRowOk & AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
                     // legördülő értékek ellenőrzése
-                    isRowOk = isRowOk && AllDropdownCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                    isRowOk = isRowOk & AllDropdownCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                    // link értékek ellenőrzése
+                    isRowOk = isRowOk & AllLinkCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                    // egyéb üzleti szabályok ellenőrzése
+                    isRowOk = isRowOk & AllExtraBusinessRuleCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
                     // Ellenőrzés státusz állítása
                     checkStatus = isRowOk ? "OK" : "Hibás";
@@ -483,6 +501,60 @@ namespace Merkit.BRC.RPA
         }
 
         /// <summary>
+        /// All Extra Business Rule Check
+        /// </summary>
+        /// <param name="currentRow"></param>
+        /// <param name="rowNum"></param>
+        /// <param name="fieldList"></param>
+        /// <returns></returns>
+        private static bool AllExtraBusinessRuleCheck(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
+        {
+            string cellValue = "";
+            string cellName = "";
+            bool isCellaValueOk = true;
+            bool isRowOk = true;
+
+            // ** irányítószám (1011-9999)
+            //cellValue = ExcelManager.GetDataRowValue(currentRow, "col.ExcelColName").ToLower();
+            //isCellaValueOk = Regex.IsMatch(cellValue, @"^[0-9]{4}$");
+            //isCellaValueOk = isCellaValueOk && Convert.ToInt32(isCellaValueOk) >= 1011;
+            //
+            //if (!isCellaValueOk)
+            //{
+            //    isRowOk = false;
+            //    cellName = fieldList["col.ExcelColName"] + rowNum.ToString();
+            //    ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+            //}
+
+            // ** KSH szám ("\d\d\d\d\d\d\d\d \d\d\d\d \d\d\d [012]\d"  /12345678 1234 123 12/
+            cellValue = ExcelManager.GetDataRowValue(currentRow, "KSH-szám").ToLower();
+            isCellaValueOk = Regex.IsMatch(cellValue, @"^\d\d\d\d\d\d\d\d \d\d\d\d \d\d\d [012]\d$");
+
+            if (!isCellaValueOk)
+            {
+                isRowOk = false;
+                cellName = fieldList["KSH-szám"] + rowNum.ToString();
+                ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+            }
+
+            // ** címek összefüggései (A "Munkavállaló: Házszám" és "Munkavállaló: HRSZ" közül az egyik kötelező adat, és mindkettő egyszerre nem lehet kitöltve)
+            cellValue = ExcelManager.GetDataRowValue(currentRow, "Munkavállaló: Házszám").ToLower();
+            string cellValue2 = ExcelManager.GetDataRowValue(currentRow, "Munkavállaló: HRSZ").ToLower();
+            isCellaValueOk = String.IsNullOrEmpty(cellValue) != String.IsNullOrEmpty(cellValue2); 
+
+            if (!isCellaValueOk)
+            {
+                isRowOk = false;
+                cellName = fieldList["Munkavállaló: Házszám"] + rowNum.ToString();
+                ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                cellName = fieldList["Munkavállaló: HRSZ"] + rowNum.ToString();
+                ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+            }
+
+            return isRowOk;
+        }
+
+        /// <summary>
         /// CsaladiAllapot
         /// </summary>
         /// <param name="currentRow"></param>
@@ -573,7 +645,7 @@ namespace Merkit.BRC.RPA
             {
                 dateTime = DateTime.MinValue;
                 cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
-                cellValue = cellValue.Length > 10 ? cellValue.Substring(0, 10) : cellValue;
+                cellValue = cellValue.Length > 10 ? cellValue.Replace(" ", "").Substring(0, 10) : cellValue;
                 cellName = fieldList[col.ExcelColName] + rowNum.ToString();
 
                 // van érték?
@@ -636,26 +708,55 @@ namespace Merkit.BRC.RPA
                 if (! String.IsNullOrEmpty(cellValue) || col.ExcelColRequired.Equals(ExcelColRequiredNum.Yes))
                 {
                     cellName = fieldList[col.ExcelColName] + rowNum.ToString();
-                    var temp = dropDownIDsbyType[col.ExcelColName];
+                    //var temp = dropDownIDsbyType[col.ExcelColName];
 
                     // létező érték?
-                    if (dropDownIDsbyType[col.ExcelColName].ContainsKey(cellValue))
+                    if (! dropDownIDsbyType[col.ExcelColName].ContainsKey(cellValue))
                     {
-                        // hibás érték?
-                        if (dropDownIDsbyType[col.ExcelColName][cellValue] <= 0)
-                        {
-                            ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
-                            isCellValuesOk = false;
-                        }
-
-                    }
-                    else
-                    {
-                        ExcelManager.SetCellColor(cellName, System.Drawing.Color.AliceBlue);
+                        ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                         isCellValuesOk = false;
                     }
                 }
 
+            }
+
+            return isCellValuesOk;
+        }
+
+        /// <summary>
+        /// Check All Link Fields
+        /// </summary>
+        /// <param name="currentRow"></param>
+        /// <param name="rowNum"></param>
+        /// <param name="fieldList"></param>
+        /// <returns></returns>
+        private static bool AllLinkCheck(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
+        {
+            string cellValue = "";
+            string cellName = "";
+            bool isCellValuesOk = true;
+            bool isGoodLink = true;
+
+            // dátum oszlopokon végigmenni
+            foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Link))
+            {
+                cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).Trim().ToLower();
+
+                // üres érték?
+                if (String.IsNullOrEmpty(cellValue))
+                {
+                    isGoodLink = col.ExcelColRequired.Equals(ExcelColRequiredNum.Yes);
+                }
+                else
+                {
+                    // link?
+                    if (Framework.IsValidURL(cellValue))
+                    {
+                        cellName = fieldList[col.ExcelColName] + rowNum.ToString();
+                        ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                        isCellValuesOk = false;
+                    }
+                }
             }
 
             return isCellValuesOk;

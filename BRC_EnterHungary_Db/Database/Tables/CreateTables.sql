@@ -1,4 +1,4 @@
-﻿-- Use BRC_Hungary_Test 
+﻿-- Use BRC_Hungary_Test
 -- GO
 
 -- DROP TABLE ExcelRows
@@ -29,12 +29,14 @@ CREATE INDEX IX2_EnterHungaryLogins On EnterHungaryLogins(Deleted)
 GO
 
 -- DropDownTypes, DropDownsValues
---DROP VIEW View_DropDowns
---go
---Drop TABLE DropDownsValues
---go
---Drop TABLE DropDownTypes
---go
+DROP TABLE ExcelRows
+GO
+DROP VIEW View_DropDowns
+go
+Drop TABLE DropDownsValues
+go
+Drop TABLE DropDownTypes
+go
 
 CREATE TABLE DropDownTypes
 (
@@ -113,13 +115,16 @@ INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (6, 'Deleted')
 GO
 
 -- ** ExcelFiles, ExcelSheets, ExcelRows
-
-DROP TABLE ExcelRows
-GO
-DROP TABLE ExcelSheets
-GO
-DROP TABLE ExcelFiles 
-GO
+-- DROP VIEW View_ExcelRowsByExcelColNames
+-- go
+-- DROP VIEW View_ExcelRows
+-- GO
+-- DROP TABLE ExcelRows
+-- GO
+-- DROP TABLE ExcelSheets
+-- GO
+-- DROP TABLE ExcelFiles 
+-- GO
 
 CREATE TABLE ExcelFiles (
 	ExcelFileId int IDENTITY(1,1) NOT NULL ,
@@ -190,7 +195,7 @@ CREATE TABLE ExcelRows(
 	ExcelSheetId int NOT NULL,
 	ExcelRowNum int NOT NULL,
 	EnterHungaryLoginId INT NOT NULL,
-    Mv_Azonosito VARCHAR(150) NOT NULL,
+    Ugyszam VARCHAR(150),
     Sz_Szul_Vezeteknev VARCHAR(150) NOT NULL,
     Sz_Szul_Keresztnev VARCHAR(150) NOT NULL,
     Sz_Utlevel_Szig VARCHAR(150) NOT NULL,
@@ -204,10 +209,8 @@ CREATE TABLE ExcelRows(
     Sz_Anyja_Vezeteknev VARCHAR(150) NOT NULL,
     Sz_Anyja_Keresztnev VARCHAR(150) NOT NULL,
     Sz_Neme INT NOT NULL,
-    Sz_Igazolvanykep VARCHAR(150) NOT NULL,
     Sz_Allampolgarsag INT NOT NULL,
     Sz_Csaladi_allapot INT NOT NULL,
-    Sz_Utlevel VARCHAR(150) NOT NULL,
     Sz_Magy_erk_meg_fogl VARCHAR(150),
     Sz_Utlevel_kiall_helye VARCHAR(150) NOT NULL,
     Sz_Utlevel_kiall_datuma DATE NOT NULL,
@@ -276,7 +279,16 @@ CREATE TABLE ExcelRows(
     Anyanyelve INT NOT NULL,
     Magyar_nyelvismeret BIT NOT NULL,
     Dolgozott_Magyarorszagon BIT,
-    Ugyszam VARCHAR(150),
+    Utlevel_link VARCHAR(150) NOT NULL,
+    Arckep_link VARCHAR(150) NOT NULL,
+    Lakasberlet_link VARCHAR(150) NOT NULL,
+    Lakas_tulajdonjog_link VARCHAR(150) NOT NULL,
+    Elozetes_megallapodas_link VARCHAR(150) NOT NULL,
+    Ceges_megh_link VARCHAR(150) NOT NULL,
+    Szallashely_bej_link VARCHAR(150) NOT NULL,
+    Postazasi_kerelem_link VARCHAR(150) NOT NULL,
+    Vizumfelv_ny_link VARCHAR(150) NOT NULL,
+    Kolcs_szerz_link VARCHAR(150) NOT NULL,
 	QStatusId int NULL,
 	QStatusTime datetime NULL,
  CONSTRAINT PK_ExcelRows PRIMARY KEY NONCLUSTERED 
@@ -569,7 +581,7 @@ SELECT
   r.ExcelSheetId,
   r.ExcelRowNum,
   (SELECT Email FROM EnterHungaryLogins Where EnterHungaryLoginId = r.EnterHungaryLoginId) AS [Ügyintéző],
-   r.Mv_Azonosito AS [Munkavállaló: Azonosító],
+   r.Ugyszam AS [Ügyszám],
    r.Sz_Szul_Vezeteknev AS [Személy: Születési vezetéknév],
    r.Sz_Szul_Keresztnev AS [Személy: Születési keresztnév],
    r.Sz_Utlevel_Szig AS [Személy: Útlevél száma/Személy ig.],
@@ -583,10 +595,8 @@ SELECT
    r.Sz_Anyja_Vezeteknev AS [Személy: Anyja vezetékneve],
    r.Sz_Anyja_Keresztnev AS [Személy: Anyja keresztneve],
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Sz_Neme) AS [Személy: Neme],
-   r.Sz_Igazolvanykep AS [Személy: Igazolványkép],
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Sz_Allampolgarsag) AS [Személy: Állampolgárság],
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Sz_Csaladi_allapot) AS [Személy: Családi állapot],
-   r.Sz_Utlevel AS [Személy: Útlevél],
    r.Sz_Magy_erk_meg_fogl AS [Személy: Magyarországra érkezést megelőző foglalkozás],
    r.Sz_Utlevel_kiall_helye AS [Személy: Útlevél kiállításának helye],
    r.Sz_Utlevel_kiall_datuma AS [Személy: Útlevél kiállításának dátuma],
@@ -655,7 +665,16 @@ SELECT
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Anyanyelve) AS [Anyanyelve],
    r.Magyar_nyelvismeret AS [Magyar nyelvismeret],
    r.Dolgozott_Magyarorszagon AS [Dolgozott-e korábban Magarországon?],
-   r.Ugyszam AS [Ügyszám]
+   r.Utlevel_link AS [Érvényes útlevél teljes másolata],
+   r.Arckep_link AS [Arckép],
+   r.Lakasberlet_link AS [Lakásbérleti jogviszonyt igazoló lakásbérleti szerződés],
+   r.Lakas_tulajdonjog_link AS [Lakás tulajdonjogát igazoló okirat],
+   r.Elozetes_megallapodas_link AS [A foglalkoztatási jogviszony létesítésére irányuló előzetes megállapodás],
+   r.Ceges_megh_link AS [Céges meghatalmazás],
+   r.Szallashely_bej_link AS [Szálláshely bejelentő lap],
+   r.Postazasi_kerelem_link AS [Postázási kérelem],
+   r.Vizumfelv_ny_link AS [Vízumfelvételi nyilatkozat],
+   r.Kolcs_szerz_link AS [Kölcsönzési szerződés]
 From ExcelRows r
 GO
 
@@ -666,7 +685,7 @@ CREATE VIEW View_ExcelRows AS
    r.ExcelSheetId,
    r.ExcelRowNum,
    (SELECT Email FROM EnterHungaryLogins Where EnterHungaryLoginId = r.EnterHungaryLoginId) AS [Ugyintezo_Email],
-   r.Mv_Azonosito,
+   r.Ugyszam,
    r.Sz_Szul_Vezeteknev,
    r.Sz_Szul_Keresztnev,
    r.Sz_Utlevel_Szig,
@@ -680,10 +699,8 @@ CREATE VIEW View_ExcelRows AS
    r.Sz_Anyja_Vezeteknev,
    r.Sz_Anyja_Keresztnev,
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Sz_Neme) AS Sz_Neme,
-   r.Sz_Igazolvanykep,
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Sz_Allampolgarsag) AS Sz_Allampolgarsag,
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Sz_Csaladi_allapot) AS Sz_Csaladi_allapot,
-   r.Sz_Utlevel,
    r.Sz_Magy_erk_meg_fogl,
    r.Sz_Utlevel_kiall_helye,
    r.Sz_Utlevel_kiall_datuma,
@@ -752,6 +769,15 @@ CREATE VIEW View_ExcelRows AS
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Anyanyelve) AS Anyanyelve,
    r.Magyar_nyelvismeret,
    r.Dolgozott_Magyarorszagon,
-   r.Ugyszam
+   r.Utlevel_link,
+   r.Arckep_link,
+   r.Lakasberlet_link,
+   r.Lakas_tulajdonjog_link,
+   r.Elozetes_megallapodas_link,
+   r.Ceges_megh_link,
+   r.Szallashely_bej_link,
+   r.Postazasi_kerelem_link,
+   r.Vizumfelv_ny_link,
+   r.Kolcs_szerz_link
 From ExcelRows r
 GO

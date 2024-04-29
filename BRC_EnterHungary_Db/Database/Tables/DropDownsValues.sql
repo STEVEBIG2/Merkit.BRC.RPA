@@ -1,4 +1,4 @@
-﻿-- DropDownTypes sorok
+﻿-- DropDownTypes sorok 
 SET NOCOUNT ON
 go
 
@@ -50,12 +50,14 @@ INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Irányítószám
 GO
 INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Munkavégzés Helye','Munkavégzés helye') 
 GO
+INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Munkavégzési közterület jellege', 'Munkavégzési közterület jellege') 
+GO
 INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Okmány Átvétele','Okmány átvétele')
 GO
 INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Kézbesítés Címe','Postai kézbesítés címe:')
 GO
 
--- ** 26/1 : Útlevél Van-e **
+-- ** 27/1 : Útlevél Van-e **
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Útlevél Van-e'
@@ -63,7 +65,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTypeId, 'Nem')
 GO
 
--- ** 26/2 : Állampolgárság
+-- ** 27/2 : Állampolgárság
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Állampolgárság'
@@ -289,7 +291,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/3 : Átvételi Ország
+-- ** 27/3 : Átvételi Ország
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Átvételi Ország'
@@ -549,7 +551,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/4 : Benyújtó
+-- ** 27/4 : Benyújtó
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Benyújtó'
@@ -560,7 +562,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/5 : Családi Állapot
+-- ** 27/5 : Családi Állapot
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Családi Állapot'
@@ -573,7 +575,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/6 : Egészségbiztosítás
+-- ** 27/6 : Egészségbiztosítás
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Egészségbiztosítás'
@@ -586,7 +588,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/7 : Előző Ország
+-- ** 27/7 : Előző Ország
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Előző Ország'
@@ -846,7 +848,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/8 : FEOR
+-- ** 27/8 : FEOR
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='FEOR'
@@ -1506,7 +1508,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/9 : Iskolai Végzettség
+-- ** 27/9 : Iskolai Végzettség
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Iskolai Végzettség'
@@ -1519,7 +1521,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/10 : Munkakör Iskolai Végzettség
+-- ** 27/10 : Munkakör Iskolai Végzettség
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Munkakör Iskolai Végzettség'
@@ -1539,7 +1541,7 @@ COMMIT TRAN
 GO
 
 
--- ** 26/11 : Munkáltató Közterület Jellege
+-- ** 27/11 : Munkáltató Közterület Jellege
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Munkáltató Közterület Jellege'
@@ -1727,7 +1729,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/12 : Nem
+-- ** 27/12 : Nem
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Nem'
@@ -1738,7 +1740,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/13 : Nemzetiség
+-- ** 27/13 : Nemzetiség
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Nemzetiség'
@@ -1982,7 +1984,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/14 : Nyelv
+-- ** 27/14 : Nyelv
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Nyelv'
@@ -2230,7 +2232,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/15 : Pénznem
+-- ** 27/15 : Pénznem
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Pénznem'
@@ -2268,7 +2270,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/16 : Szállás Emelet
+-- ** 27/16 : Szállás Emelet
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Szállás Emelet'
@@ -2299,7 +2301,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/17 : Szállás Közterület Jellege
+-- ** 27/17 : Szállás Közterület Jellege
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Szállás Közterület Jellege'
@@ -2349,7 +2351,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/18 : Szállás Tartózkodási Jogcíme
+-- ** 27/18 : Szállás Tartózkodási Jogcíme
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Szállás Tartózkodási Jogcíme'
@@ -2363,7 +2365,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/19 : Születési Ország
+-- ** 27/19 : Születési Ország
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Születési Ország'
@@ -2623,7 +2625,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/20 : TEÁOR
+-- ** 27/20 : TEÁOR
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='TEÁOR'
@@ -3248,7 +3250,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/21 : Továbbutazási Ország
+-- ** 27/21 : Továbbutazási Ország
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Továbbutazási Ország'
@@ -3508,7 +3510,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/22 : Útlevél Típus
+-- ** 27/22 : Útlevél Típus
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Útlevél Típus'
@@ -3525,7 +3527,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/23 : Irányítószám
+-- ** 27/23 : Irányítószám
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Irányítószám'
@@ -11858,7 +11860,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/24 : Munkavégzés Helye **
+-- ** 27/24 : Munkavégzés Helye **
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 BEGIN TRAN
@@ -11868,7 +11870,195 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/25 : Okmány Átvétele **
+-- ** 27/25 : Munkavégzési közterület jellege **
+Declare @DropDownTypeId int
+Set @DropDownTypeId = -1
+BEGIN TRAN
+SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Munkavégzési közterület jellege'
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, '--válasszon--') 
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Akna')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Akna-Alsó')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Akna-Felső')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Alagút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Alsórakpart')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Arborétum')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Autóút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Barakképület')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Barlang')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Bejáró')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Bekötőút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Bánya')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Bányatelep')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Bástya')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Bástyája')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Csárda')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Csónakházak')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Domb')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Dűlő')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Dűlősor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Dűlőterület')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Dűlőút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Egyetemváros')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Egyéb')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Elágazás')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Emlékpark')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Emlékút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Erdészház')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Erdészlak')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Erdő')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Erdősor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Fasor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Fasora')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Felső')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Forduló')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Föld')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Főmérnökség')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Főtér')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Főút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Gyár')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Gyártelep')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Gyárváros')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Gyümölcsös')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Gát')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Gátsor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Gátőrház')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Határsor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Határút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Hegyv')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Hegyhát')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Ház')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Hídfő')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Iskola')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Ismeretlen')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Jav.alatt')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Játszótér')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kapu')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kastély')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kert')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kertje')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kertsor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kilátó')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kioszk')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kocsiszín')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kolónia')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Korzó')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kultúrpark')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kunyhó')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kör')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Körtér')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Körvasútsor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Körzet')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Körönd')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Körút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Körútja')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Köz')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Kültelek')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Lakóház')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Lakónegyed')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Lakópark')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Lakótelep')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Lejtő')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Lejáró')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Liget')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Lépcső')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Magánút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Major')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Malom')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Mellékköz')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Menedékház')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Munkásszálló')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Mélyút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Műút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Oldal')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Orom')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Park')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Parkja')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Part')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Pavilonsor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Piac')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Pihenő')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Pince')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Pincesor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Puszta')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Pálya')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Pályaudvar')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Rakpart')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Repülőtér')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Rész')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Rét')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Sarok')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Sikátor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Sor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Sora')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Sportpálya')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Sporttelep')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Stadion')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Strandfürdő')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Sugárút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Szer')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Sziget')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Szivattyútelep')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Szállás')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Szállások')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Szél')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Szőlő')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Szőlőhegy')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Szőlők')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Sánc')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Sávház')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Sétány')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Tag')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Tanya')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Tanyák')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Telep')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Temető')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Tere')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Tető')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Turistaház')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Téli')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Tér')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Tömb')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Udvar')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Utak')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Utca')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Utcája')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Vadaskert')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Vadászház')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Vasúti')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Vasútsor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Vasútállomás')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Vezetőút')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Villasor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Vágóhíd')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Vár')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Várköz')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Város')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Vízmű')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Völgy')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Zsilip')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Zug')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Állat')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Állomás')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Árnyék')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Árok')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Átjáró')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Ösvény')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Út')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Útja')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Útőrház')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Üdülő')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Üdülő-Part')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Üdülő-Sor')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Üdülő-Telep')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Üdülőpart')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Őrház')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Őrházak')
+INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownTypeId, 'Őrházlak')
+COMMIT TRAN
+GO
+
+-- ** 27/26 : Okmány Átvétele **
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 BEGIN TRAN
@@ -11878,7 +12068,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/26 : Kézbesítés Címe **
+-- ** 27/27 : Kézbesítés Címe **
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 BEGIN TRAN

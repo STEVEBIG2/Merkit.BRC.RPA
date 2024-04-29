@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -59,6 +60,58 @@ namespace Merkit.RPA.PA.Framework
             }
 
             return;
+        }
+
+
+        /// <summary>
+        /// Get First File
+        /// </summary>
+        /// <param name="inputDir"></param>
+        /// <param name="searchPattern"></param>
+        /// <returns></returns>
+        public static string GetFirstFileName(string inputDir, string searchPattern)
+        {
+            string workfileName = "";
+            string[] files = Directory.GetFiles(inputDir, searchPattern);
+            workfileName = files.FirstOrDefault();
+            return workfileName;
+        }
+
+        /// <summary>
+        /// Get File From Queue
+        /// </summary>
+        /// <param name="inputDir"></param>
+        /// <param name="searchPattern"></param>
+        /// <param name="workDir"></param>
+        /// <returns></returns>
+        public static string GetFileFromQueue(string inputDir, string searchPattern, string workDir)
+        {
+            string workfileName = "";
+            string file = GetFirstFileName(inputDir, searchPattern);
+
+            if (!String.IsNullOrEmpty(file))
+            {
+                workfileName = Path.Combine(workDir, Path.GetFileName(file)); //String.Format(@"{0}\{1}", workDir, Path.GetFileName(file));
+                File.Move(file, workfileName);
+            }
+
+            return workfileName;
+        }
+
+        /// <summary>
+        /// Archive Queue File
+        /// </summary>
+        /// <param name="queueFileName"></param>
+        /// <param name="isSuccessfull"></param>
+        /// <param name="successfullDir"></param>
+        /// <param name="failedDir"></param>
+        /// <returns></returns>
+        public static string ArchiveQueueFile(string queueFileName, bool isSuccessfull, string successfullDir, string failedDir)
+        {
+            string workfileName = Path.Combine( isSuccessfull ? successfullDir : failedDir, Path.GetFileName(queueFileName));
+            File.Move(queueFileName, workfileName);
+            return workfileName;
+
         }
 
     }

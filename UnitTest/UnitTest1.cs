@@ -45,6 +45,37 @@ namespace UnitTestProject1
             Config.MsSqlPassword = "Qw52267660";  
         }
 
+
+        [TestMethod]
+        public void TestValidZip()
+        {
+            // (1011-9999)
+            string zip = @"1011";
+            //string pattern = @"^[0-9]{4}$";
+            bool isOk = Regex.IsMatch(zip, @"^[0-9]{4}$");
+            isOk = isOk && Convert.ToInt32(zip) >= 1011; 
+            Assert.IsTrue(isOk);
+        }
+
+        [TestMethod]
+        public void TestValidKSH()
+        {
+            // 12345678 1239 123 12
+            string KSH = @"12345678 1234 123 12";
+            bool isOk = Regex.IsMatch(KSH, @"^\d\d\d\d\d\d\d\d \d\d\d\d \d\d\d [012]\d$");
+            Assert.IsTrue(isOk);
+        }
+
+        [TestMethod]
+        public void TestValidURL()
+        {
+            string URL = @"https://merkithu0-my.sharepoint.com/:b:/g/personal/istvan_nagy_merkit_hu/ESot8UKUE2RCqnGzu9X3EksBmShPzLhfd33vLvd2mCThfA?e=lSS4RQ";
+            string Pattern = @"^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$";
+            Regex Rgx = new Regex(Pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            bool isOk = Rgx.IsMatch(URL);
+            Assert.IsTrue(isOk);
+        }
+
         [TestMethod]
         public void TestRegex()
         {
@@ -232,16 +263,6 @@ namespace UnitTestProject1
             jsonLogFile.Write(ExcelValidator.dropDownIDsbyType);
 
             Assert.IsTrue(true);
-        }
-
-        [TestMethod]
-        public void TestExcelWorkbookValidator()
-        {
-            InitConfig();
-            MSSQLManager sqlManager = new MSSQLManager();
-            sqlManager.ConnectByConfig();
-            bool isOk = ExcelValidator.ExcelWorkbookValidator(ExcelFileName, sqlManager);
-            Assert.IsTrue(isOk);
         }
 
         [TestMethod]

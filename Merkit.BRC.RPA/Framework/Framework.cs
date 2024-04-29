@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Merkit.RPA.PA.Framework;
+using System.Text.RegularExpressions;
 
 namespace Merkit.BRC.RPA
 {
@@ -18,7 +19,33 @@ namespace Merkit.BRC.RPA
         /// <returns></returns>
         public static string VersionInfo()
         {
-            return "0.4.25";
+            return "0.4.29";
+        }
+
+        /// <summary>
+        /// Is URl valid?
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public static bool IsValidURL(string url)
+        {
+            string Pattern = @"^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$";
+            Regex Rgx = new Regex(Pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            bool isOk = Rgx.IsMatch(url);
+            return isOk;
+        }
+
+        /// <summary>
+        /// Is URl valid?
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public static bool IsValidZip(string url)
+        {
+            string Pattern = @"^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$";
+            Regex Rgx = new Regex(Pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            bool isOk = Rgx.IsMatch(url);
+            return isOk;
         }
 
         /// <summary>
