@@ -147,8 +147,6 @@ namespace UnitTestProject1
         [TestMethod]
         public void TestCreateExcelRowsSQLScripts()
         {
-
-            int counter = 10;
             string excelColName = "";
             string sqlcolName = "";
             string sqlType = "";
@@ -156,8 +154,12 @@ namespace UnitTestProject1
             List<string> createColums = new List<string>();
             List<string> createIndexes = new List<string>();
             List<string> foreignKeys = new List<string>();
-            List<string> view1Colums = new List<string>(); // !!!
-            List<string> view2Colums = new List<string>(); // !!!
+            List<string> view1Colums = new List<string>();
+            List<string> view2Colums = new List<string>();
+            //
+            List<string> procParameters = new List<string>();
+            List<string> insertPart1 = new List<string>();
+            List<string> insertPart2 = new List<string>();
 
             foreach (ExcelCol excelCol in ExcelValidator.excelHeaders.Where(x => !String.IsNullOrEmpty(x.SQLColName)))
             {
@@ -170,6 +172,14 @@ namespace UnitTestProject1
                 {
                     case ExcelColTypeNum.Text:
                         sqlType = excelCol.ExcelColRole.Equals(ExcelColRoleNum.ZipCode) ? "VARCHAR(10)" : "VARCHAR(150)";
+
+                        if(excelCol.ExcelColRole.Equals(ExcelColRoleNum.ZipCode))
+                        {
+                            createIndexes.Add(String.Format("CREATE INDEX IX_ExcelRows_{0} ON ExcelRows({0})", sqlcolName));
+                            createIndexes.Add("GO");
+                            createIndexes.Add("");
+                        }
+
                         break;
                     case ExcelColTypeNum.Number:
                         sqlType = "INT";
@@ -206,12 +216,18 @@ namespace UnitTestProject1
                 if(excelCol.ExcelColRequired == ExcelColRequiredNum.Yes)
                 {
                     sqlNotNull = "NOT NULL";
+                    procParameters.Add(String.Format("@{0} {1}", sqlcolName, sqlType));
+                }
+                else
+                {
+                    procParameters.Add(String.Format("@{0} {1}=NULL", sqlcolName, sqlType));
                 }
 
                 createColums.Add(String.Format("{0} {1} {2}", sqlcolName, sqlType, sqlNotNull).Trim());
 
+
                 // view sor
-                if(excelCol.ExcelColType == ExcelColTypeNum.Dropdown)
+                if (excelCol.ExcelColType == ExcelColTypeNum.Dropdown)
                 {
                     view1Colums.Add(String.Format("(SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.{0}) AS [{1}]", sqlcolName, excelColName));
                     view2Colums.Add(String.Format("(SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.{0}) AS {0}", sqlcolName));
@@ -231,6 +247,8 @@ namespace UnitTestProject1
 
             string sqlView1Columns = String.Join("," + Environment.NewLine, view1Colums);
             string sqlView2Columns = String.Join("," + Environment.NewLine, view2Colums);
+
+            string sqlProcParameters = String.Join("," + Environment.NewLine, procParameters);  
 
             Assert.IsTrue(true);
         }

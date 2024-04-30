@@ -70,5 +70,6 @@
     <Build Include="Database\Tables\DropDownsValues.sql" />
     <Build Include="Database\EnableDiagramMaker.sql" />
     <Build Include="Database\Tables\ZipCodes.sql" />
+    <Build Include="Database\StoredProcedures\InsertExcelSheet.sql" />
   </ItemGroup>
 </Project>

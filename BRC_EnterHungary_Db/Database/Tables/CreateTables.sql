@@ -147,7 +147,6 @@ GO
 CREATE TABLE ExcelFiles (
 	ExcelFileId int IDENTITY(1,1) NOT NULL ,
 	ExcelFileName varchar(50) NOT NULL,
-	ExcelType varchar(20) NOT NULL,
 	QStatusId int NULL,
 	QStatusTime datetime NULL,
 	RobotName varchar(50) NULL,
@@ -161,10 +160,7 @@ GO
 CREATE UNIQUE INDEX IX1_ExcelFiles On ExcelFiles(ExcelFileName)
 GO
 
-CREATE INDEX IX2_ExcelFiles On ExcelFiles(ExcelType, QStatusId)
-GO
-
-CREATE INDEX IX3_ExcelFiles On ExcelFiles(QStatusId)
+CREATE INDEX IX2_ExcelFiles On ExcelFiles(QStatusId)
 GO
 
 ALTER TABLE ExcelFiles  WITH CHECK ADD  CONSTRAINT FK_ExcelFiles_QStatuses FOREIGN KEY(QStatusId) REFERENCES QStatuses (QStatusId)
