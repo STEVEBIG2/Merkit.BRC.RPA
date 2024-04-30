@@ -91,6 +91,7 @@ namespace Merkit.BRC.RPA
         //  ** dropdown oszlopok kigyűjtése kódlista készítéshez
         public static Dictionary<string, List<string>> dropDownValuesbyType = new Dictionary<string, List<string>>();
         public static Dictionary<string, Dictionary<string, int>> dropDownIDsbyType = new Dictionary<string, Dictionary<string, int>>();
+        public static List<string> zipCodes = new List<string>();   
 
         public static int excelColNum = 0;
 
@@ -161,13 +162,13 @@ namespace Merkit.BRC.RPA
                 new ExcelCol(++excelColNum, "Munkáltató közterület jellege", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munk_kozt_jellege"),
                 new ExcelCol(++excelColNum, "Munkáltató házszám/hrsz", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munk_hazszam"),
                 new ExcelCol(++excelColNum, "TEÁOR szám", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "TEAOR_szam"),
-                new ExcelCol(++excelColNum, "KSH-szám", ExcelColTypeNum.Text, ExcelColRoleNum.Regex, @"\d\d\d\d\d\d\d\d \d\d\d\d \d\d\d [012]\d", ExcelColRequiredNum.Yes, "KSH_szam"),
+                new ExcelCol(++excelColNum, "KSH-szám", ExcelColTypeNum.Text, ExcelColRoleNum.Regex, @"^\d{14}\d[012]\d$", ExcelColRequiredNum.Yes, "KSH_szam"),
                 new ExcelCol(++excelColNum, "Munkáltató adószáma/adóazonosító jele", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munk_Adoszam"),
                 new ExcelCol(++excelColNum, "A foglalkoztatás munkaerő-kölcsönzés keretében történik", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munkaero_kolcsonzes"),
                 new ExcelCol(++excelColNum, "Munkakörhöz szükséges iskolai végzettség", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munkakor_szuks_isk_vegz"),
                 new ExcelCol(++excelColNum, "Szakképzettsége", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Szakkepzettsege"),
                 new ExcelCol(++excelColNum, "Munkavégzés helye", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Mvegz_helye"),
-                new ExcelCol(++excelColNum, "Munkavégzési irányítószám", ExcelColTypeNum.Dropdown, ExcelColRoleNum.ZipCode, null, ExcelColRequiredNum.No, "Mvegz_iranyitoszam"),
+                new ExcelCol(++excelColNum, "Munkavégzési irányítószám", ExcelColTypeNum.Text, ExcelColRoleNum.ZipCode, null, ExcelColRequiredNum.No, "Mvegz_iranyitoszam"),
                 new ExcelCol(++excelColNum, "Munkavégzési település", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Mvegz_telepules"),
                 new ExcelCol(++excelColNum, "Munkavégzési közterület neve", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Mvegz_kozt_neve"),
                 new ExcelCol(++excelColNum, "Munkavégzési közterület jellege", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Mvegz_kozt_jellege"),
@@ -217,7 +218,7 @@ namespace Merkit.BRC.RPA
                 GetEnterHungaryLogins(sqlManager);
 
                 // *** dropdown lista ellenőrzéshez előkészülés
-                foreach (ExcelCol col in ExcelValidator.excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Dropdown))
+                foreach (ExcelCol col in ExcelValidator.excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Dropdown && x.ExcelColRole != ExcelColRoleNum.ZipCode))
                 {
                     dropDownValuesbyType.Add(col.ExcelColName, new List<string>());
                 }
@@ -346,7 +347,7 @@ namespace Merkit.BRC.RPA
             string checkStatuscellName = dictExcelColumnNameToExcellCol["Ellenőrzés Státusz"];
 
             LoadDropdownValuesFromSQL(sqlManager, dt);
-
+            LoadZipCodeValuesFromSQL(sqlManager, dt);
             bool isRowOk = true;
             bool isGoodRow = false;
             string checkStatus = "";
@@ -362,23 +363,29 @@ namespace Merkit.BRC.RPA
                 // nem ellenőrzött sor?
                 if (String.IsNullOrEmpty(checkStatus))
                 {
-                    // Nőtlen v. hajadon -> Nőtlen/hajadon
-                    isRowOk = isRowOk & CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                    // ügyintéző ellenőrzése
-                    isRowOk = isRowOk & AdministratorChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
                     // kötelező szöveges oszlopok ellenőrzése
                     isRowOk = isRowOk & AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                    // regex szöveges oszlopok ellenőrzése
+                    isRowOk = isRowOk & AllRegexFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
                     // Dátum átalakítás és ellenőrzés
                     isRowOk = isRowOk & AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
-                    // legördülő értékek ellenőrzése
-                    isRowOk = isRowOk & AllDropdownCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
                     // link értékek ellenőrzése
                     isRowOk = isRowOk & AllLinkCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                    // ügyintéző ellenőrzése
+                    isRowOk = isRowOk & AdministratorChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                    // irányítószámok ellenőrzése
+                    isRowOk = isRowOk & AllZipCodeCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                    // Nőtlen v. hajadon -> Nőtlen/hajadon
+                    isRowOk = isRowOk & CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                    // legördülő értékek ellenőrzése
+                    isRowOk = isRowOk & AllDropdownCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
                     // egyéb üzleti szabályok ellenőrzése
                     isRowOk = isRowOk & AllExtraBusinessRuleCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
@@ -424,7 +431,7 @@ namespace Merkit.BRC.RPA
         }
 
         /// <summary>
-        /// Az oldalon lévő, a flowhoz szükséges dropdown elemek értékeit betölti SQL-ből
+        /// A munkalapon lévő, a flowhoz szükséges dropdown elemek értékeit betölti SQL-ből
         /// </summary>
         /// <param name="sqlManager"></param>
         /// <param name="dt"></param>
@@ -432,6 +439,7 @@ namespace Merkit.BRC.RPA
         public static bool LoadDropdownValuesFromSQL(MSSQLManager sqlManager, System.Data.DataTable dt)
         {
             string cellValue = "";
+            string dropDownValue = "";
 
             // dropdown oszlopok típusa alapján kódlista készítése
             foreach (DataRow excelRow in dt.Rows)
@@ -452,7 +460,10 @@ namespace Merkit.BRC.RPA
 
             foreach (string colName in dropDownValuesbyType.Keys)
             {
-                dropDownIDsbyType.Add(colName, new Dictionary<string, int>());
+                if(!dropDownIDsbyType.ContainsKey(colName))
+                {
+                    dropDownIDsbyType.Add(colName, new Dictionary<string, int>());
+                }
 
                 List<string> sqlColNames = dropDownValuesbyType[colName];
                 string[] array = sqlColNames.ToArray();
@@ -470,10 +481,51 @@ namespace Merkit.BRC.RPA
 
                     foreach (DataRow dr in dt.Rows)
                     {
-                        dropDownIDsbyType[colName].Add(dr["DropDownValue"].ToString().ToLower(), Int32.Parse(dr["DropDownsValueId"].ToString()));
+                        dropDownValue = dr["DropDownValue"].ToString().ToLower();
+
+                        if (!dropDownIDsbyType[colName].ContainsKey(dropDownValue))
+                        {
+                            dropDownIDsbyType[colName].Add(dropDownValue, Int32.Parse(dr["DropDownsValueId"].ToString()));
+                        }
                     }
                 }
 
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// A munkalapon lévő, a flowhoz szükséges irányítószámok értékeit betölti SQL-ből
+        /// </summary>
+        /// <param name="sqlManager"></param>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        public static bool LoadZipCodeValuesFromSQL(MSSQLManager sqlManager, System.Data.DataTable dt)
+        {
+            string sqlCmd = "";
+            string cellValue = "";
+
+            // minden sorból kigyűjtés
+            foreach (DataRow excelRow in dt.Rows)
+            {
+                // aktuális sor irányítószám oszlopainak átnézése
+                foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRole == ExcelColRoleNum.ZipCode))
+                {
+                    cellValue = excelRow[col.ExcelColName].ToString();
+
+                    // nem volt még ilyen irányítószám kigyűjtve?
+                    if (! String.IsNullOrEmpty(cellValue) && ! zipCodes.Contains(cellValue))
+                    {
+                        sqlCmd = String.Format("SELECT COUNT(*) FROM ZipCodes WHERE ZipCode='{0}' AND DELETED=0", cellValue);
+
+                        // létező irányítószám?
+                        if (Convert.ToInt32(sqlManager.ExecuteScalar(sqlCmd)) > 0)
+                        {
+                            zipCodes.Add(cellValue);
+                        }                        
+                    }
+                }
             }
 
             return true;
@@ -514,28 +566,16 @@ namespace Merkit.BRC.RPA
             bool isCellaValueOk = true;
             bool isRowOk = true;
 
-            // ** irányítószám (1011-9999)
-            //cellValue = ExcelManager.GetDataRowValue(currentRow, "col.ExcelColName").ToLower();
-            //isCellaValueOk = Regex.IsMatch(cellValue, @"^[0-9]{4}$");
-            //isCellaValueOk = isCellaValueOk && Convert.ToInt32(isCellaValueOk) >= 1011;
+            // ** KSH szám ("\d\d\d\d\d\d\d\d \d\d\d\d \d\d\d [012]\d"  /12345678 1234 123 12/
+            //cellValue = ExcelManager.GetDataRowValue(currentRow, "KSH-szám").ToLower().Replace(" ", "");
+            //isCellaValueOk = Regex.IsMatch(cellValue, @"^\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d[012]\d$"); // ^\d{14}\d[012]\d$
             //
             //if (!isCellaValueOk)
             //{
             //    isRowOk = false;
-            //    cellName = fieldList["col.ExcelColName"] + rowNum.ToString();
+            //    cellName = fieldList["KSH-szám"] + rowNum.ToString();
             //    ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
             //}
-
-            // ** KSH szám ("\d\d\d\d\d\d\d\d \d\d\d\d \d\d\d [012]\d"  /12345678 1234 123 12/
-            cellValue = ExcelManager.GetDataRowValue(currentRow, "KSH-szám").ToLower();
-            isCellaValueOk = Regex.IsMatch(cellValue, @"^\d\d\d\d\d\d\d\d \d\d\d\d \d\d\d [012]\d$");
-
-            if (!isCellaValueOk)
-            {
-                isRowOk = false;
-                cellName = fieldList["KSH-szám"] + rowNum.ToString();
-                ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
-            }
 
             // ** címek összefüggései (A "Munkavállaló: Házszám" és "Munkavállaló: HRSZ" közül az egyik kötelező adat, és mindkettő egyszerre nem lehet kitöltve)
             cellValue = ExcelManager.GetDataRowValue(currentRow, "Munkavállaló: Házszám").ToLower();
@@ -607,23 +647,57 @@ namespace Merkit.BRC.RPA
         /// <param name="datumHeaderek"></param>
         private static bool AllRequiredFieldChecker(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
         {
-            bool isCellValueOk = true;
+            bool isRowValueOk = true;
 
             // dátum oszlopokon végigmenni
-            foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRequired == ExcelColRequiredNum.Yes))
+            foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRequired == ExcelColRequiredNum.Yes && x.ExcelColRole != ExcelColRoleNum.Regex ))
             {
                 string cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
                 string cellName = fieldList[col.ExcelColName] + rowNum.ToString();
 
                 if (cellValue.Length == 0)
                 {
-                    isCellValueOk = false;
+                    isRowValueOk = false;
                     ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                 }
 
             }
 
-            return isCellValueOk;
+            return isRowValueOk;
+        }
+
+        /// <summary>
+        /// Check All Regex Text Fields
+        /// </summary>
+        /// <param name="currentRow"></param>
+        /// <param name="rowNum"></param>
+        /// <param name="fieldList"></param>
+        /// <param name="datumHeaderek"></param>
+        private static bool AllRegexFieldChecker(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
+        {
+            bool isRowValueOk = true;
+            bool isCellValueOk = true;
+
+            // regex oszlopokon végigmenni
+            foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRole == ExcelColRoleNum.Regex))
+            {
+                string cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
+                string cellName = fieldList[col.ExcelColName] + rowNum.ToString();
+
+                if (cellValue.Length > 0 || col.ExcelColRequired == ExcelColRequiredNum.Yes)
+                {
+                    isCellValueOk = Regex.IsMatch(cellValue.Replace(" ", ""), col.ExcelColRoleExpression); // ^\d{14}\d[012]\d$
+
+                    if (!isCellValueOk)
+                    {
+                        isRowValueOk = false;
+                        ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                    }
+                }
+
+            }
+
+            return isRowValueOk;
         }
 
         /// <summary>
@@ -691,7 +765,7 @@ namespace Merkit.BRC.RPA
         /// <param name="currentRow"></param>
         /// <param name="rowNum"></param>
         /// <param name="fieldList"></param>
-        /// <param name="datumHeaderek"></param>
+        /// <returns></returns>
         private static bool AllDropdownCheck(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
         {
             string cellValue = "";
@@ -712,6 +786,44 @@ namespace Merkit.BRC.RPA
 
                     // létező érték?
                     if (! dropDownIDsbyType[col.ExcelColName].ContainsKey(cellValue))
+                    {
+                        ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                        isCellValuesOk = false;
+                    }
+                }
+
+            }
+
+            return isCellValuesOk;
+        }
+
+        /// <summary>
+        /// Check All Dropdown Fields
+        /// </summary>
+        /// <param name="currentRow"></param>
+        /// <param name="rowNum"></param>
+        /// <param name="fieldList"></param>
+        /// <returns></returns>
+        private static bool AllZipCodeCheck(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
+        {
+            string cellValue = "";
+            string cellName = "";
+            DateTime dateTime = DateTime.MinValue;
+            bool isCellValuesOk = true;
+
+            // irányítószám oszlopokon végigmenni
+            foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRole == ExcelColRoleNum.ZipCode))
+            {
+                cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).Trim().ToLower();
+
+                // nem lehet üres vagy van érték?
+                if (!String.IsNullOrEmpty(cellValue) || col.ExcelColRequired.Equals(ExcelColRequiredNum.Yes))
+                {
+                    cellName = fieldList[col.ExcelColName] + rowNum.ToString();
+                    //var temp = dropDownIDsbyType[col.ExcelColName];
+
+                    // nem létező érték?
+                    if (!zipCodes.Contains(cellValue))
                     {
                         ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                         isCellValuesOk = false;

@@ -131,7 +131,7 @@ namespace Merkit.BRC.RPA
         /// <param name="statement"></param>
         /// <param name="arguments"></param>
         /// <returns></returns>
-        public object ExecuteScalar(string statement, Dictionary<string, object> arguments)
+        public object ExecuteScalar(string statement, Dictionary<string, object> arguments= null)
         {
             object retvalue = null;
             bool needOpenClose = MSSQLOpen();

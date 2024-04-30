@@ -1,4 +1,4 @@
-﻿-- Use BRC_Hungary_Test
+﻿-- Use BRC_Hungary_Test 
 -- GO
 
 -- DROP TABLE ExcelRows
@@ -28,15 +28,33 @@ GO
 CREATE INDEX IX2_EnterHungaryLogins On EnterHungaryLogins(Deleted)
 GO
 
--- DropDownTypes, DropDownsValues
-DROP TABLE ExcelRows
+-- ZipCodes
+-- DROP TABLE ZipCodes
+-- GO
+
+CREATE TABLE ZipCodes
+(
+	ZipCodeId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	ZipCode VARCHAR(10) NOT NULL,
+	Deleted INT NOT NULL DEFAULT 0
+)
 GO
-DROP VIEW View_DropDowns
-go
-Drop TABLE DropDownsValues
-go
-Drop TABLE DropDownTypes
-go
+
+CREATE UNIQUE INDEX IX1_ZipCodes On ZipCodes(ZipCode)
+GO
+
+CREATE UNIQUE INDEX IX2_ZipCodes On ZipCodes(ZipCode, Deleted)
+GO
+
+-- DropDownTypes, DropDownsValues
+-- DROP TABLE ExcelRows
+-- GO
+-- DROP VIEW View_DropDowns
+-- go
+-- Drop TABLE DropDownsValues
+-- go
+-- Drop TABLE DropDownTypes
+-- go
 
 CREATE TABLE DropDownTypes
 (
@@ -222,7 +240,7 @@ CREATE TABLE ExcelRows(
     Engedely_hosszabbitas BIT NOT NULL,
     Utlevel_tipusa INT NOT NULL,
     Iskolai_vegzettsege INT NOT NULL,
-    Mv_Iranyitoszam VARCHAR(150) NOT NULL,
+    Mv_Iranyitoszam VARCHAR(10) NOT NULL,
     Mv_Telepules VARCHAR(150) NOT NULL,
     Mv_Kozterulet_neve VARCHAR(150) NOT NULL,
     Mv_Kozterulet_jellege INT NOT NULL,
@@ -254,7 +272,7 @@ CREATE TABLE ExcelRows(
     Atveteli_orszag INT,
     Atveteli_telepules VARCHAR(150),
     Munk_rovid_cegnev VARCHAR(150) NOT NULL,
-    Munk_Iranyitoszam VARCHAR(150) NOT NULL,
+    Munk_Iranyitoszam VARCHAR(10) NOT NULL,
     Munk_Telepules VARCHAR(150) NOT NULL,
     Munk_kozt_neve VARCHAR(150) NOT NULL,
     Munk_kozt_jellege INT NOT NULL,
@@ -266,7 +284,7 @@ CREATE TABLE ExcelRows(
     Munkakor_szuks_isk_vegz INT NOT NULL,
     Szakkepzettsege VARCHAR(150) NOT NULL,
     Mvegz_helye INT NOT NULL,
-    Mvegz_iranyitoszam INT,
+    Mvegz_iranyitoszam VARCHAR(10),
     Mvegz_telepules VARCHAR(150),
     Mvegz_kozt_neve VARCHAR(150),
     Mvegz_kozt_jellege INT,
@@ -550,10 +568,22 @@ GO
 ALTER TABLE ExcelRows CHECK CONSTRAINT FK_ExcelRows_Mvegz_helye
 GO
 
-ALTER TABLE ExcelRows WITH CHECK ADD CONSTRAINT FK_ExcelRows_Mvegz_iranyitoszam FOREIGN KEY(Mvegz_iranyitoszam) REFERENCES DropDownsValues(DropDownsValueId)
+ALTER TABLE ExcelRows WITH CHECK ADD CONSTRAINT FK_ExcelRows_Mvegz_iranyitoszam FOREIGN KEY(Mvegz_iranyitoszam) REFERENCES ZipCodes(ZipCode)
 GO
 
 ALTER TABLE ExcelRows CHECK CONSTRAINT FK_ExcelRows_Mvegz_iranyitoszam
+GO
+
+ALTER TABLE ExcelRows WITH CHECK ADD CONSTRAINT FK_ExcelRows_Munk_Iranyitoszam FOREIGN KEY(Munk_Iranyitoszam) REFERENCES ZipCodes(ZipCode)
+GO
+
+ALTER TABLE ExcelRows CHECK CONSTRAINT FK_ExcelRows_Munk_Iranyitoszam
+GO
+
+ALTER TABLE ExcelRows WITH CHECK ADD CONSTRAINT FK_ExcelRows_Mv_Iranyitoszam FOREIGN KEY(Mv_Iranyitoszam) REFERENCES ZipCodes(ZipCode)
+GO
+
+ALTER TABLE ExcelRows CHECK CONSTRAINT FK_ExcelRows_Mv_Iranyitoszam
 GO
 
 ALTER TABLE ExcelRows WITH CHECK ADD CONSTRAINT FK_ExcelRows_Mvegz_kozt_jellege FOREIGN KEY(Mvegz_kozt_jellege) REFERENCES DropDownsValues(DropDownsValueId)
@@ -652,7 +682,7 @@ SELECT
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Munkakor_szuks_isk_vegz) AS [Munkakörhöz szükséges iskolai végzettség],
    r.Szakkepzettsege AS [Szakképzettsége],
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Mvegz_helye) AS [Munkavégzés helye],
-   (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Mvegz_iranyitoszam) AS [Munkavégzési irányítószám],
+   r.Mvegz_iranyitoszam AS [Munkavégzési irányítószám],
    r.Mvegz_telepules AS [Munkavégzési település],
    r.Mvegz_kozt_neve AS [Munkavégzési közterület neve],
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Mvegz_kozt_jellege) AS [Munkavégzési közterület jellege],
@@ -756,7 +786,7 @@ CREATE VIEW View_ExcelRows AS
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Munkakor_szuks_isk_vegz) AS Munkakor_szuks_isk_vegz,
    r.Szakkepzettsege,
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Mvegz_helye) AS Mvegz_helye,
-   (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Mvegz_iranyitoszam) AS Mvegz_iranyitoszam,
+   r.Mvegz_iranyitoszam,
    r.Mvegz_telepules,
    r.Mvegz_kozt_neve,
    (SELECT DropDownValue FROM DropDownsValues Where DropDownsValueId = r.Mvegz_kozt_jellege) AS Mvegz_kozt_jellege,

@@ -30,14 +30,14 @@ namespace UnitTestProject1
         private const string PasswordName = "UiPath: Enter Hungary";
         private const string UserName = "istvan.nagy@merkit.hu";
         private const string Password = "Qw52267660";
-        private const string ExcelFileName = @"c:\Munka\Teszt_adatok.xlsx";
+        private const string ExcelFileName = @"c:\Munka\Work\Teszt_adatok.xlsx";
         // String.Format("Data Source={0};Initial Catalog={1};User Id={2};Password={3};Application Name={4};Connect Timeout={5};Encrypt=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False; MultipleActiveResultSets=True", in_Config.MsSqlHost, in_Config.MsSqlDatabase, userName, password, in_Config.AppCode, 30)
 
         public void InitConfig()
         {
             Config.AppName = "UnitTest";
             Config.LogLevel = 0;
-            Config.LogFileName = @"c:\Munka\log_{0}.txt";
+            Config.LogFileName = @"c:\Munka\Work\log_{0}.txt";
             //
             Config.MsSqlHost = @"STEVE-LAPTOP\SQLEXPRESS";
             Config.MsSqlDatabase = "BRC_Hungary_Test";
@@ -169,7 +169,7 @@ namespace UnitTestProject1
                 switch (excelCol.ExcelColType)
                 {
                     case ExcelColTypeNum.Text:
-                        sqlType = "VARCHAR(150)";
+                        sqlType = excelCol.ExcelColRole.Equals(ExcelColRoleNum.ZipCode) ? "VARCHAR(10)" : "VARCHAR(150)";
                         break;
                     case ExcelColTypeNum.Number:
                         sqlType = "INT";

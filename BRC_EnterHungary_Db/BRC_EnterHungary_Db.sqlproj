@@ -69,5 +69,6 @@
     <Build Include="Database\StoredProcedures\SetAllStatusId.sql" />
     <Build Include="Database\Tables\DropDownsValues.sql" />
     <Build Include="Database\EnableDiagramMaker.sql" />
+    <Build Include="Database\Tables\ZipCodes.sql" />
   </ItemGroup>
 </Project>
