@@ -5,6 +5,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Reflection.Emit;
+using System.Security.Cryptography;
 using Merkit.RPA.PA.Framework;
 
 namespace Merkit.BRC.RPA
@@ -125,13 +126,15 @@ namespace Merkit.BRC.RPA
             return;
         }
 
+
         /// <summary>
         /// Execute Scalar
         /// </summary>
         /// <param name="statement"></param>
+        /// <param name="tr"></param>
         /// <param name="arguments"></param>
         /// <returns></returns>
-        public object ExecuteScalar(string statement, Dictionary<string, object> arguments= null)
+        public object ExecuteScalar(string statement, SqlTransaction tr = null, Dictionary<string, object> arguments = null)
         {
             object retvalue = null;
             bool needOpenClose = MSSQLOpen();
@@ -145,6 +148,11 @@ namespace Merkit.BRC.RPA
                     //cmd.Parameters.AddWithValue("@name", "BMW");
                     cmd.Parameters.AddWithValue(argument.Key, argument.Value);
                 }
+            }
+
+            if (tr != null)
+            {
+                cmd.Transaction = tr;
             }
 
             retvalue = cmd.ExecuteScalar();
@@ -190,6 +198,24 @@ namespace Merkit.BRC.RPA
             return retvalue;
         }
 
+        /// <summary>
+        /// ExecuteQuery in transaction
+        /// </summary>
+        /// <param name="statement"></param>
+        /// <param name="tr"></param>
+        /// <returns></returns>
+        public DataTable ExecuteQuery(string statement, SqlTransaction tr)
+        {
+            return ExecuteQuery(statement, null, CommandType.Text, tr);
+        }
+
+        /// <summary>
+        /// ExecuteNonQuery
+        /// </summary>
+        /// <param name="statement"></param>
+        /// <param name="arguments"></param>
+        /// <param name="tr"></param>
+        /// <returns></returns>
         public int ExecuteNonQuery(string statement, Dictionary<string, object> arguments = null, SqlTransaction tr = null)
         {
             int retvalue = 0;
@@ -257,6 +283,14 @@ namespace Merkit.BRC.RPA
             return retvalue;
         }
 
+        /// <summary>
+        /// ExecuteProcWithResults
+        /// </summary>
+        /// <param name="statement"></param>
+        /// <param name="returnValue"></param>
+        /// <param name="arguments"></param>
+        /// <param name="tr"></param>
+        /// <returns></returns>
         public DataTable ExecuteProcWithResults(string statement, ref int returnValue, Dictionary<string, object> arguments = null, SqlTransaction tr = null)
         {
             DataTable retvalue = new DataTable();

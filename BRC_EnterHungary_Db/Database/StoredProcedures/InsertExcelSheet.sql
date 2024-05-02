@@ -7,15 +7,17 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
+DROP PROCEDURE [dbo].[InsertExcelSheet]
+GO
 
 -- =============================================  
 -- Author: Steve
--- Create date: 2024.04.30
+-- Create date: 2024.05.02
 -- Description: Insert Excel Sheet
 -- ============================================= 
 CREATE PROCEDURE [dbo].[InsertExcelSheet]
   @ExcelFileId int,
-  @ExcelFileName varchar(50),
+  @ExcelSheetName varchar(50),
   @RobotName varchar(50)
 AS
 BEGIN  
@@ -28,7 +30,7 @@ BEGIN
         QStatusTime
      ) VALUES (
 	    @ExcelFileId,
-	    @ExcelFileName,
+	    @ExcelSheetName,
         0,
         getdate()
 	)

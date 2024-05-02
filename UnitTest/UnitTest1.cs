@@ -224,7 +224,8 @@ namespace UnitTestProject1
                 }
 
                 createColums.Add(String.Format("{0} {1} {2}", sqlcolName, sqlType, sqlNotNull).Trim());
-
+                insertPart1.Add(sqlcolName);
+                insertPart2.Add("@" + sqlcolName);    
 
                 // view sor
                 if (excelCol.ExcelColType == ExcelColTypeNum.Dropdown)
@@ -248,7 +249,9 @@ namespace UnitTestProject1
             string sqlView1Columns = String.Join("," + Environment.NewLine, view1Colums);
             string sqlView2Columns = String.Join("," + Environment.NewLine, view2Colums);
 
-            string sqlProcParameters = String.Join("," + Environment.NewLine, procParameters);  
+            string sqlProcParameters = String.Join("," + Environment.NewLine, procParameters);
+            string sqlinsertPart1 = String.Join("," + Environment.NewLine, insertPart1);
+            string sqlinsertPart2 = String.Join("," + Environment.NewLine, insertPart2);
 
             Assert.IsTrue(true);
         }
