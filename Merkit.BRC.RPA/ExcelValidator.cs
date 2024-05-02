@@ -1,4 +1,5 @@
 ﻿using Merkit.RPA.PA.Framework;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -226,7 +227,6 @@ namespace Merkit.BRC.RPA
             return result;
         }
 
-
         /// <summary>
         /// Call InsertExcelSheetProc stored procedure
         /// </summary>
@@ -260,6 +260,50 @@ namespace Merkit.BRC.RPA
 
             return result;
         }
+
+        /// <summary>
+        /// Call InsertExcelSheetProc stored procedure
+        /// </summary>
+        /// <param name="excelFileId"></param>
+        /// <param name="excelSheetName"></param>
+        /// <param name="sqlManager"></param>
+        /// <param name="tr"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static int InsertExcelRowProc(int excelFileId, int excelSheetId, int excelRownNum, DataRow dr, MSSQLManager sqlManager, SqlTransaction tr = null)
+        {
+            int result = -1;
+
+            Dictionary<string, object> paramsDict = new Dictionary<string, object>()
+            {
+                { "@ExcelFileId", excelFileId },
+                { "@ExcelSheetId", excelSheetId },
+                { "@ExcelRowNum", excelRownNum }
+                //{ "@RobotName", Environment.UserName }
+            };
+
+            // paraméterek összeállítása
+            foreach (ExcelCol excelCol in excelHeaders.Where(x => !String.IsNullOrEmpty(x.SQLColName)))
+            {
+                paramsDict.Add("@"+excelCol.SQLColName, dr[excelCol.ExcelColName].ToString());
+            }
+
+            try
+            {
+                result = sqlManager.ExecuteProcWithReturnValue(
+                    "InsertExcelRow",
+                    paramsDict,
+                    tr);
+            }
+            catch (SqlException ex)
+            {
+                sqlManager.Rollback(tr);
+                throw new Exception("SqlException: " + ex.Message);
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Main Process
         /// </summary>
@@ -321,6 +365,7 @@ namespace Merkit.BRC.RPA
         {
             Framework.Logger(0, "ExcelHeaderValidator", "Info", "", "-", String.Format("{0} file ellenőrzése elkezdődött.", excelFileName));
             Dictionary<string, bool> excelSheetHeaderChecking = new Dictionary<string, bool>();
+            Dictionary<string, int> excelSheets = new Dictionary<string, int>();
             bool isOk = ExcelManager.OpenExcel(excelFileName);
 
             // Excel megnyitása sikeres?
@@ -336,13 +381,14 @@ namespace Merkit.BRC.RPA
                     {
                         excelSheetHeaderChecking.Add(sheetName, ExcelSheetHeaderValidator(sheetName, sqlManager));
                         int excelSheetId = InsertExcelSheetProc(excelFileId, sheetName, sqlManager, tr);
+                        excelSheets.Add(sheetName.Trim(), excelSheetId);
                     }
                 }
 
                 // munkalapok sorainak ellenőrzése
                 foreach(KeyValuePair<string, bool> goodSheetNameItem in excelSheetHeaderChecking.Where(x => x.Value))
                 {
-                    ExcelSheetRowsValidator(goodSheetNameItem.Key, sqlManager, tr);
+                    ExcelSheetRowsValidator(excelFileId, excelSheets[goodSheetNameItem.Key], goodSheetNameItem.Key, sqlManager, tr);
                 }
 
                 ExcelManager.CloseExcel();
@@ -408,9 +454,13 @@ namespace Merkit.BRC.RPA
         /// <summary>
         /// Excel Rows Validator
         /// </summary>
-        /// <param name="excelFileName"></param>
+        /// <param name="excelFileId"></param>
+        /// <param name="excelSheetId"></param>
+        /// <param name="sheetName"></param>
+        /// <param name="sqlManager"></param>
+        /// <param name="tr"></param>
         /// <returns></returns>
-        public static bool ExcelSheetRowsValidator(string sheetName, MSSQLManager sqlManager, SqlTransaction tr = null)
+        public static bool ExcelSheetRowsValidator(int excelFileId, int excelSheetId, string sheetName, MSSQLManager sqlManager, SqlTransaction tr = null)
         {
             Framework.Logger(0, "ExcelSheetRowsValidator", "Info", "", "-", String.Format("A(z) {0} munkalap sorainak ellenőrzése elkezdődött.", sheetName));
 
@@ -467,6 +517,13 @@ namespace Merkit.BRC.RPA
                     // Ellenőrzés státusz állítása
                     checkStatus = isRowOk ? "OK" : "Hibás";
                     ExcelManager.SetCellValue(checkStatuscellName + rowNum.ToString(), checkStatus);
+
+                    // SQL-be írás kell?
+                    if(isRowOk)
+                    {
+                        int excelRowId = InsertExcelRowProc(excelFileId, excelSheetId, rowNum, currentRow, sqlManager, tr);
+                    }
+
                     //  var x = ExcelSheet.get_Range("C2").Style;
                 }
                 else
