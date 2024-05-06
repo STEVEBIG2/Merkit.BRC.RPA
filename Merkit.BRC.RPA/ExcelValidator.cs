@@ -73,6 +73,20 @@ namespace Merkit.BRC.RPA
         
     }
 
+    public class EnterHungaryLogin
+    {
+        public int EnterHungaryLoginId { get; set; }
+        public string Email { get; set; }
+        public string PasswordText { get; set; }
+
+        public EnterHungaryLogin(int enterHungaryLoginId, string email, string passwordText) 
+        {
+            this.EnterHungaryLoginId = enterHungaryLoginId;
+            this.Email = email;
+            this.PasswordText = passwordText;
+        }  
+    }
+
     /// <summary>
     /// BRC_Enterhungary input excel ellenőrzése
     /// </summary>
@@ -80,7 +94,7 @@ namespace Merkit.BRC.RPA
     {
         #region public változók
 
-        public static Dictionary<string, string> enterHungaryLogins = new Dictionary<string, string>(); // ügyintézők
+        public static Dictionary<string, EnterHungaryLogin> enterHungaryLogins = new Dictionary<string, EnterHungaryLogin>(); // ügyintézők
 
         //  ** dropdown oszlopok kigyűjtése kódlista készítéshez
         public static Dictionary<string, List<string>> dropDownValuesbyType = new Dictionary<string, List<string>>();
@@ -272,20 +286,66 @@ namespace Merkit.BRC.RPA
         /// <exception cref="Exception"></exception>
         public static int InsertExcelRowProc(int excelFileId, int excelSheetId, int excelRownNum, DataRow dr, MSSQLManager sqlManager, SqlTransaction tr = null)
         {
+            string[] yesValues = { "igen", "yes", "true" };
             int result = -1;
+            string colStrValue = "";
+            string dropdownValue = "";
+            int colIntValue = -1;
+            string ugyintezoValue = ExcelManager.GetDataRowValue(dr, "Ügyintéző").ToLower();
 
             Dictionary<string, object> paramsDict = new Dictionary<string, object>()
             {
                 { "@ExcelFileId", excelFileId },
                 { "@ExcelSheetId", excelSheetId },
-                { "@ExcelRowNum", excelRownNum }
+                { "@ExcelRowNum", excelRownNum },
+                { "@EnterHungaryLoginId", enterHungaryLogins[ugyintezoValue].EnterHungaryLoginId }
                 //{ "@RobotName", Environment.UserName }
             };
 
             // paraméterek összeállítása
-            foreach (ExcelCol excelCol in excelHeaders.Where(x => !String.IsNullOrEmpty(x.SQLColName)))
+            foreach (ExcelCol excelCol in excelHeaders.Where(x => ! String.IsNullOrEmpty(x.SQLColName)))
             {
-                paramsDict.Add("@"+excelCol.SQLColName, dr[excelCol.ExcelColName].ToString());
+                colStrValue = dr[excelCol.ExcelColName].ToString();
+
+                // üres érték?
+                if (String.IsNullOrEmpty(colStrValue))
+                {
+                    paramsDict.Add("@" + excelCol.SQLColName, null);
+                }
+                else
+                {
+                    // dropdown?
+                    if(excelCol.ExcelColType == ExcelColTypeNum.Dropdown)
+                    {
+                        dropdownValue = dr[excelCol.ExcelColName].ToString().ToLower();
+
+                        try
+                        {
+                            colIntValue = dropDownIDsbyType[excelCol.ExcelColName][dropdownValue];
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception(ex.Message + ". " + excelCol.ExcelColName + " -> " + dropdownValue);
+                        }
+
+                        paramsDict.Add("@" + excelCol.SQLColName, colIntValue);
+                    }
+                    else
+                    {
+                        if (excelCol.ExcelColType == ExcelColTypeNum.Date)
+                        {
+                            colStrValue = colStrValue.Length > 10 ? colStrValue.Replace(" ", "").Substring(0, 10) : colStrValue;
+                        }
+
+                        if (excelCol.ExcelColType == ExcelColTypeNum.YesNo)
+                        {
+                            colStrValue = yesValues.Contains(colStrValue.ToLower()) ? "1": "0";
+                        }
+
+                        paramsDict.Add("@" + excelCol.SQLColName, colStrValue);
+                    }
+                }
+
             }
 
             try
@@ -351,7 +411,6 @@ namespace Merkit.BRC.RPA
 
             return processOk;
         }
-
 
         /// <summary>
         /// Excel Workbook Validator
@@ -489,6 +548,9 @@ namespace Merkit.BRC.RPA
                 {
                     // kötelező szöveges oszlopok ellenőrzése
                     isRowOk = isRowOk & AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                    // kötelező igen/nem oszlopok ellenőrzése
+                    isRowOk = isRowOk & AllBoolFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
 
                     // regex szöveges oszlopok ellenőrzése
                     isRowOk = isRowOk & AllRegexFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
@@ -673,11 +735,17 @@ namespace Merkit.BRC.RPA
         /// <returns></returns>
         private static void GetEnterHungaryLogins(MSSQLManager sqlManager)
         {
-            System.Data.DataTable dt = sqlManager.ExecuteQuery("SELECT Email,PasswordText FROM EnterHungaryLogins WHERE Deleted=0");
+            int enterHungaryLoginId = 0;
+            string email = "";
+            string passwordText = "";
+            System.Data.DataTable dt = sqlManager.ExecuteQuery("SELECT EnterHungaryLoginId, Email,PasswordText FROM EnterHungaryLogins WHERE Deleted=0");
 
             foreach (DataRow row in dt.Rows)
             {
-                enterHungaryLogins.Add(row[0].ToString().ToLower(), row[1].ToString());
+                enterHungaryLoginId = Convert.ToInt32(row[0]);
+                email = row[1].ToString().ToLower();
+                passwordText = row[2].ToString();
+                enterHungaryLogins.Add(email, new EnterHungaryLogin(enterHungaryLoginId, email, passwordText));
             }
 
             return;
@@ -781,12 +849,41 @@ namespace Merkit.BRC.RPA
             bool isRowValueOk = true;
 
             // dátum oszlopokon végigmenni
-            foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRequired == ExcelColRequiredNum.Yes && x.ExcelColRole != ExcelColRoleNum.Regex ))
+            foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRequired == ExcelColRequiredNum.Yes && x.ExcelColRole != ExcelColRoleNum.Regex && x.ExcelColType != ExcelColTypeNum.YesNo))
             {
                 string cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
                 string cellName = fieldList[col.ExcelColName] + rowNum.ToString();
 
                 if (cellValue.Length == 0)
+                {
+                    isRowValueOk = false;
+                    ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                }
+
+            }
+
+            return isRowValueOk;
+        }
+
+        /// <summary>
+        /// Check All Boolean Fields
+        /// </summary>
+        /// <param name="currentRow"></param>
+        /// <param name="rowNum"></param>
+        /// <param name="fieldList"></param>
+        /// <returns></returns>
+        private static bool AllBoolFieldChecker(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
+        {
+            bool isRowValueOk = true;
+            string[] yesNoValues = { "igen", "nem", "yes", "no" };
+
+            // dátum oszlopokon végigmenni
+            foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRequired == ExcelColRequiredNum.Yes && x.ExcelColType == ExcelColTypeNum.YesNo))
+            {
+                string cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
+                string cellName = fieldList[col.ExcelColName] + rowNum.ToString();
+
+                if (cellValue.Length == 0 || ! yesNoValues.Contains(cellValue))
                 {
                     isRowValueOk = false;
                     ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
@@ -901,10 +998,9 @@ namespace Merkit.BRC.RPA
         {
             string cellValue = "";
             string cellName = "";
-            DateTime dateTime = DateTime.MinValue;
             bool isCellValuesOk = true;
 
-            // dátum oszlopokon végigmenni
+            // dropdown oszlopokon végigmenni
             foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Dropdown))
             {
                 cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).Trim().ToLower();

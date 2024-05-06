@@ -244,6 +244,13 @@ namespace Merkit.BRC.RPA
             return retvalue;
         }
 
+        /// <summary>
+        /// Execute Proc With Return Value
+        /// </summary>
+        /// <param name="statement"></param>
+        /// <param name="arguments"></param>
+        /// <param name="tr"></param>
+        /// <returns></returns>
         public int ExecuteProcWithReturnValue(string statement, Dictionary<string, object> arguments = null, SqlTransaction tr = null)
         {
             int retvalue = 0;
@@ -329,22 +336,48 @@ namespace Merkit.BRC.RPA
             return retvalue;
         }
 
+        /// <summary>
+        /// Begin Transaction
+        /// </summary>
+        /// <returns></returns>
         public SqlTransaction BeginTransaction()
         {
-
             SqlTransaction transaction = Connection.BeginTransaction();
             return transaction;
         }
 
+        /// <summary>
+        /// Commit
+        /// </summary>
+        /// <param name="transaction"></param>
         public void Commit(SqlTransaction transaction)
         {
-            transaction.Commit();
+            if (Connection != null)
+            {
+                transaction.Commit();
+            }
+
             return;
         }
 
+        /// <summary>
+        /// Rollback
+        /// </summary>
+        /// <param name="transaction"></param>
         public void Rollback(SqlTransaction transaction)
         {
-            transaction.Rollback();
+            try
+            {
+                if (Connection != null)
+                {
+                    transaction.Rollback();
+                }
+
+            }
+            catch (Exception ex)
+            {
+            }
+
             return;
         }
 
