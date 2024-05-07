@@ -1,9 +1,16 @@
 ﻿-- DropDownTypes sorok 
+-- delete from [dbo].[DropDownsValues]
+-- go
+-- delete from [dbo].[DropDownTypes]
+-- go
+-- DBCC CHECKIDENT ('[DropDownsValues]', RESEED, 0);
+-- GO
+-- DBCC CHECKIDENT ('[DropDownTypes]', RESEED, 0);
+-- GO
+
 SET NOCOUNT ON
 go
-
-INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Útlevél Van-e','Visszautazás - útlevél van-e')
-GO			 
+		 
 INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Állampolgárság','Személy: Állampolgárság')
 GO								 
 INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Átvételi Ország','Átvételi ország')
@@ -55,15 +62,7 @@ GO
 INSERT INTO DropDownTypes (DropDownName, ExcelColNames) VALUES('Kézbesítés Címe','Postai kézbesítés címe:')
 GO
 
--- ** 26/1 : Útlevél Van-e **
-Declare @DropDownTypeId int
-Set @DropDownTypeId = -1
-SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Útlevél Van-e'
-INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTypeId, 'Igen')
-INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTypeId, 'Nem')
-GO
-
--- ** 26/2 : Állampolgárság
+-- ** 25/1 : Állampolgárság
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Állampolgárság'
@@ -289,7 +288,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/3 : Átvételi Ország
+-- ** 25/2 : Átvételi Ország
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Átvételi Ország'
@@ -549,7 +548,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/4 : Benyújtó
+-- ** 25/3 : Benyújtó
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Benyújtó'
@@ -560,7 +559,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/5 : Családi Állapot
+-- ** 25/4 : Családi Állapot
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Családi Állapot'
@@ -573,7 +572,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/6 : Egészségbiztosítás
+-- ** 25/5 : Egészségbiztosítás
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Egészségbiztosítás'
@@ -586,7 +585,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/7 : Előző Ország
+-- ** 25/6 : Előző Ország
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Előző Ország'
@@ -846,7 +845,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/8 : FEOR
+-- ** 25/7 : FEOR
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='FEOR'
@@ -1506,7 +1505,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/9 : Iskolai Végzettség
+-- ** 25/8 : Iskolai Végzettség
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Iskolai Végzettség'
@@ -1519,7 +1518,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/10 : Munkakör Iskolai Végzettség
+-- ** 25/9 : Munkakör Iskolai Végzettség
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Munkakör Iskolai Végzettség'
@@ -1539,7 +1538,7 @@ COMMIT TRAN
 GO
 
 
--- ** 26/11 : Munkáltató Közterület Jellege
+-- ** 25/10 : Munkáltató Közterület Jellege
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Munkáltató Közterület Jellege'
@@ -1727,7 +1726,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/12 : Nem
+-- ** 25/11 : Nem
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Nem'
@@ -1738,7 +1737,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/13 : Nemzetiség
+-- ** 25/12 : Nemzetiség
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Nemzetiség'
@@ -1982,7 +1981,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/14 : Nyelv
+-- ** 25/13 : Nyelv
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Nyelv'
@@ -2230,7 +2229,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/15 : Pénznem
+-- ** 25/14 : Pénznem
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Pénznem'
@@ -2268,7 +2267,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/16 : Szállás Emelet
+-- ** 25/15 : Szállás Emelet
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Szállás Emelet'
@@ -2299,7 +2298,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/17 : Szállás Közterület Jellege
+-- ** 25/16 : Szállás Közterület Jellege
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Szállás Közterület Jellege'
@@ -2349,7 +2348,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/18 : Szállás Tartózkodási Jogcíme
+-- ** 25/17 : Szállás Tartózkodási Jogcíme
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Szállás Tartózkodási Jogcíme'
@@ -2363,7 +2362,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/19 : Születési Ország
+-- ** 25/18 : Születési Ország
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Születési Ország'
@@ -2623,7 +2622,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/20 : TEÁOR
+-- ** 25/19 : TEÁOR
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='TEÁOR'
@@ -3248,7 +3247,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/21 : Továbbutazási Ország
+-- ** 25/20 : Továbbutazási Ország
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Továbbutazási Ország'
@@ -3508,7 +3507,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/22 : Útlevél Típus
+-- ** 25/21 : Útlevél Típus
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 SELECT @DropDownTypeId = DropDownTypeId FROM DropDownTypes Where  DropDownName='Útlevél Típus'
@@ -3525,7 +3524,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/23 : Munkavégzés Helye **
+-- ** 25/22 : Munkavégzés Helye **
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 BEGIN TRAN
@@ -3535,7 +3534,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/24 : Munkavégzési közterület jellege **
+-- ** 25/23 : Munkavégzési közterület jellege **
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 BEGIN TRAN
@@ -3723,7 +3722,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES(@DropDownType
 COMMIT TRAN
 GO
 
--- ** 26/25 : Okmány Átvétele **
+-- ** 25/24 : Okmány Átvétele **
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 BEGIN TRAN
@@ -3733,7 +3732,7 @@ INSERT INTO DropDownsValues (DropDownTypeId, DropDownValue) VALUES (@DropDownTyp
 COMMIT TRAN
 GO
 
--- ** 26/26 : Kézbesítés Címe **
+-- ** 25/25 : Kézbesítés Címe **
 Declare @DropDownTypeId int
 Set @DropDownTypeId = -1
 BEGIN TRAN

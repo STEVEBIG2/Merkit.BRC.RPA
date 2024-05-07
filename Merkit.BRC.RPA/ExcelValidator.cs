@@ -1,5 +1,4 @@
 ﻿using Merkit.RPA.PA.Framework;
-using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -105,7 +104,9 @@ namespace Merkit.BRC.RPA
 
         public static List<ExcelCol> excelHeaders = new List<ExcelCol>() {
                 // new ExcelCol(++excelColNum, "Ügyszám", ExcelColTypeNum.Text, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, "Ugyszam"),
+                new ExcelCol(++excelColNum, "Beadható-e", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Beadhato"),
                 new ExcelCol(++excelColNum, "Ellenőrzés Státusz", ExcelColTypeNum.None, ExcelColRoleNum.CreateIfNoExists, null, ExcelColRequiredNum.No, ""),
+                new ExcelCol(++excelColNum, "Ügyintéző", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, ""), // EnterHungaryLoginId
                 new ExcelCol(++excelColNum, "Személy: Születési vezetéknév", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Szul_Vezeteknev"),
                 new ExcelCol(++excelColNum, "Személy: Születési keresztnév", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Szul_Keresztnev"),
                 new ExcelCol(++excelColNum, "Személy: Útlevél száma/Személy ig.", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Sz_Utlevel_Szig"),
@@ -146,18 +147,18 @@ namespace Merkit.BRC.RPA
                 new ExcelCol(++excelColNum, "Egészségbiztosítás", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Egeszsegbiztositas"),
                 new ExcelCol(++excelColNum, "Visszautazási ország", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Visszautazasi_orszag"),
                 new ExcelCol(++excelColNum, "Visszautazáskor közlekedési eszköz", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Visszaut_kozl_eszk"),
-                new ExcelCol(++excelColNum, "Visszautazás - útlevél van-e", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Visszautazas_utlevel"),
+                new ExcelCol(++excelColNum, "Visszautazás - útlevél van-e", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Visszautazas_utlevel"),
                 new ExcelCol(++excelColNum, "Érkezést megelőző ország", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Erkezest_meg_orszag"),
                 new ExcelCol(++excelColNum, "Érkezést megelőző település", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Erkezest_meg_telepules"),
-                new ExcelCol(++excelColNum, "Schengeni tartkózkodási okmány van-e", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Schengeni_tart_eng"),
-                new ExcelCol(++excelColNum, "Elutasított tartózkodási kérelem", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Elut_tart_kerelem"),
-                new ExcelCol(++excelColNum, "Büntetett előélet", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Buntetett_eloelet"),
-                new ExcelCol(++excelColNum, "Kiutasították-e korábban", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Kiutasitottak_e"),
-                new ExcelCol(++excelColNum, "Szenved-e gyógykezelésre szoruló betegségekben", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Szenv_gyogyk_sz_betegseg"),
-                new ExcelCol(++excelColNum, "Kiskorú gyermek vele utazik-e", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Kiskoru_gyermek"),
+                new ExcelCol(++excelColNum, "Schengeni tartkózkodási okmány van-e", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Schengeni_tart_eng"),
+                new ExcelCol(++excelColNum, "Elutasított tartózkodási kérelem", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Elut_tart_kerelem"),
+                new ExcelCol(++excelColNum, "Büntetett előélet", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Buntetett_eloelet"),
+                new ExcelCol(++excelColNum, "Kiutasították-e korábban", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Kiutasitottak_e"),
+                new ExcelCol(++excelColNum, "Szenved-e gyógykezelésre szoruló betegségekben", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Szenv_gyogyk_sz_betegseg"),
+                new ExcelCol(++excelColNum, "Kiskorú gyermek vele utazik-e", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Kiskoru_gyermek"),
                 new ExcelCol(++excelColNum, "Okmány átvétele", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Okmany_atvetele"),
                 new ExcelCol(++excelColNum, "Postai kézbesítés címe:", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Postai_kezb_cime"),
-                new ExcelCol(++excelColNum, "Email cím", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Email"),
+                new ExcelCol(++excelColNum, "Email cím", ExcelColTypeNum.Text, ExcelColRoleNum.Regex, @"^[\w-\.]+@([\w-]+\.)+[\w-]+$", ExcelColRequiredNum.Yes, "Email"),
                 new ExcelCol(++excelColNum, "Telefonszám", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Telefonszam"),
                 new ExcelCol(++excelColNum, "Benyújtó", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Benyujto"),
                 new ExcelCol(++excelColNum, "Okmány átvétel külképviseleten?", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Okmany_atv_kulkepviselet"),
@@ -172,7 +173,7 @@ namespace Merkit.BRC.RPA
                 new ExcelCol(++excelColNum, "TEÁOR szám", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "TEAOR_szam"),
                 new ExcelCol(++excelColNum, "KSH-szám", ExcelColTypeNum.Text, ExcelColRoleNum.Regex, @"^\d{14}\d[012]\d$", ExcelColRequiredNum.Yes, "KSH_szam"),
                 new ExcelCol(++excelColNum, "Munkáltató adószáma/adóazonosító jele", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munk_Adoszam"),
-                new ExcelCol(++excelColNum, "A foglalkoztatás munkaerő-kölcsönzés keretében történik", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munkaero_kolcsonzes"),
+                new ExcelCol(++excelColNum, "A foglalkoztatás munkaerő-kölcsönzés keretében történik", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munkaero_kolcsonzes"),
                 new ExcelCol(++excelColNum, "Munkakörhöz szükséges iskolai végzettség", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Munkakor_szuks_isk_vegz"),
                 new ExcelCol(++excelColNum, "Szakképzettsége", ExcelColTypeNum.Text, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Szakkepzettsege"),
                 new ExcelCol(++excelColNum, "Munkavégzés helye", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Mvegz_helye"),
@@ -188,7 +189,7 @@ namespace Merkit.BRC.RPA
                 new ExcelCol(++excelColNum, "Foglalkoztatóval kötött megállapodás kelte", ExcelColTypeNum.Date, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Fogl_megall_kelte"),
                 new ExcelCol(++excelColNum, "Anyanyelve", ExcelColTypeNum.Dropdown, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Anyanyelve"),
                 new ExcelCol(++excelColNum, "Magyar nyelvismeret", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Magyar_nyelvismeret"),
-                new ExcelCol(++excelColNum, "Dolgozott-e korábban Magyarországon?", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.No, "Dolgozott_Magyarorszagon"),
+                new ExcelCol(++excelColNum, "Dolgozott-e korábban Magyarországon?", ExcelColTypeNum.YesNo, ExcelColRoleNum.None, null, ExcelColRequiredNum.Yes, "Dolgozott_Magyarorszagon"),
                 //
                 new ExcelCol(++excelColNum, "Érvényes útlevél teljes másolata", ExcelColTypeNum.Text, ExcelColRoleNum.Link, null, ExcelColRequiredNum.Yes, "Utlevel_link"),
                 new ExcelCol(++excelColNum, "Arckép", ExcelColTypeNum.Text, ExcelColRoleNum.Link, null, ExcelColRequiredNum.Yes, "Arckep_link"),
@@ -364,53 +365,6 @@ namespace Merkit.BRC.RPA
             return result;
         }
 
-        /// <summary>
-        /// Main Process
-        /// </summary>
-        /// <returns></returns>
-        public static bool MainProcess(string excelFileName)
-        {
-            bool processOk = false;            
-            MSSQLManager sqlManager = new MSSQLManager();
-            SqlTransaction tr = null;
-            sqlManager.ConnectByConfig();
-
-            try
-            {
-                // ügyintéző login adatok begyűjtése
-                GetEnterHungaryLogins(sqlManager);
-
-                // *** dropdown lista ellenőrzéshez előkészülés
-                foreach (ExcelCol col in ExcelValidator.excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Dropdown && x.ExcelColRole != ExcelColRoleNum.ZipCode))
-                {
-                    dropDownValuesbyType.Add(col.ExcelColName, new List<string>());
-                }
-
-                // excel feldolgozás
-                tr = sqlManager.BeginTransaction();
-                int excelFileId = InsertExcelFileProc(excelFileName, sqlManager, tr);
-                processOk = ExcelWorkbookValidator(excelFileName, excelFileId, sqlManager, tr);
-
-                sqlManager.Commit(tr);
-            }
-            catch (Exception ex)
-            {
-                Framework.Logger(0, "MainProcess", "Err", "", "-", String.Format("MainProcess hiba: {0}", ex.Message));
-
-                if(tr != null)
-                {
-                    sqlManager.Rollback(tr);
-                }
-
-                throw new Exception(ex.Message); ;
-            }
-            finally
-            {
-                sqlManager.Disconnect();
-            }
-
-            return processOk;
-        }
 
         /// <summary>
         /// Excel Workbook Validator
@@ -689,6 +643,29 @@ namespace Merkit.BRC.RPA
         }
 
         /// <summary>
+        /// GetEnterHungaryLogins
+        /// </summary>
+        /// <param name="sqlManager"></param>
+        /// <returns></returns>
+        public static void GetEnterHungaryLogins(MSSQLManager sqlManager)
+        {
+            int enterHungaryLoginId = 0;
+            string email = "";
+            string passwordText = "";
+            System.Data.DataTable dt = sqlManager.ExecuteQuery("SELECT EnterHungaryLoginId, Email,PasswordText FROM EnterHungaryLogins WHERE Deleted=0");
+
+            foreach (DataRow row in dt.Rows)
+            {
+                enterHungaryLoginId = Convert.ToInt32(row[0]);
+                email = row[1].ToString().ToLower();
+                passwordText = row[2].ToString();
+                enterHungaryLogins.Add(email, new EnterHungaryLogin(enterHungaryLoginId, email, passwordText));
+            }
+
+            return;
+        }
+
+        /// <summary>
         /// A munkalapon lévő, a flowhoz szükséges irányítószámok értékeit betölti SQL-ből
         /// </summary>
         /// <param name="sqlManager"></param>
@@ -727,29 +704,6 @@ namespace Merkit.BRC.RPA
         #endregion
 
         #region Private függvények (oszloponkénti ellenőrzések)
-
-        /// <summary>
-        /// GetEnterHungaryLogins
-        /// </summary>
-        /// <param name="sqlManager"></param>
-        /// <returns></returns>
-        private static void GetEnterHungaryLogins(MSSQLManager sqlManager)
-        {
-            int enterHungaryLoginId = 0;
-            string email = "";
-            string passwordText = "";
-            System.Data.DataTable dt = sqlManager.ExecuteQuery("SELECT EnterHungaryLoginId, Email,PasswordText FROM EnterHungaryLogins WHERE Deleted=0");
-
-            foreach (DataRow row in dt.Rows)
-            {
-                enterHungaryLoginId = Convert.ToInt32(row[0]);
-                email = row[1].ToString().ToLower();
-                passwordText = row[2].ToString();
-                enterHungaryLogins.Add(email, new EnterHungaryLogin(enterHungaryLoginId, email, passwordText));
-            }
-
-            return;
-        }
 
         /// <summary>
         /// All Extra Business Rule Check
@@ -826,7 +780,7 @@ namespace Merkit.BRC.RPA
             string colName = "Ügyintéző";
             string cellValue = ExcelManager.GetDataRowValue(currentRow, colName).ToLower();
             string cellName = fieldList[colName] + rowNum.ToString();
-            bool isCellValueOk = enterHungaryLogins.ContainsKey(cellValue);
+            bool isCellValueOk = cellValue.Length>0 && enterHungaryLogins.ContainsKey(cellValue);
             
             // ügyintéző létezik?
             if (!isCellValueOk)
@@ -843,7 +797,7 @@ namespace Merkit.BRC.RPA
         /// <param name="currentRow"></param>
         /// <param name="rowNum"></param>
         /// <param name="fieldList"></param>
-        /// <param name="datumHeaderek"></param>
+        /// <returns></returns>
         private static bool AllRequiredFieldChecker(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
         {
             bool isRowValueOk = true;

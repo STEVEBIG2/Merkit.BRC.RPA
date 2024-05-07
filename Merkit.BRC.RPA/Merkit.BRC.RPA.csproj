@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dispatcher.cs" />
     <Compile Include="Framework\Config.cs" />
     <Compile Include="Framework\ExcelManager.cs" />
     <Compile Include="ExcelValidator.cs" />

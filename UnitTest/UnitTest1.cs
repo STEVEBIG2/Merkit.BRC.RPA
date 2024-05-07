@@ -137,10 +137,10 @@ namespace UnitTestProject1
         }
 
         [TestMethod]
-        public void TestMainProcess()
+        public void TestDispatcherMainProcess()
         {
             InitConfig();
-            bool isOk = ExcelValidator.MainProcess(ExcelFileName);
+            bool isOk = Dispatcher.MainProcess(ExcelFileName);
             Assert.IsTrue(isOk);
         }
 
@@ -235,8 +235,16 @@ namespace UnitTestProject1
                 }
                 else
                 {
-                    view1Colums.Add(String.Format("r.{0} AS [{1}]", sqlcolName, excelColName));
-                    view2Colums.Add("r." + sqlcolName);
+                    if (excelCol.ExcelColType == ExcelColTypeNum.YesNo)
+                    {
+                        view1Colums.Add(String.Format("CASE WHEN {0}=1 THEN 'Igen' ELSE 'Nem' END AS [{1}]", sqlcolName, excelColName));
+                        view2Colums.Add("r." + sqlcolName);
+                    }
+                    else
+                    {
+                        view1Colums.Add(String.Format("r.{0} AS [{1}]", sqlcolName, excelColName));
+                        view2Colums.Add("r." + sqlcolName);
+                    }
                 }
 
             }
