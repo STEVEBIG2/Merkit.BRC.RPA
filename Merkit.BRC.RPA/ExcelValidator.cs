@@ -8,18 +8,6 @@ using System.Text.RegularExpressions;
 
 namespace Merkit.BRC.RPA
 {
-    public enum QStatusNum
-    {
-        Locked = -1,
-        New = 0,
-        InProgress = 1,
-        Failed = 2,
-        SuccessFullExcel = 3,
-        SuccessFullRow = 4,
-        Exported = 5,
-        Deleted = 6
-    };
-
     public enum ExcelColTypeNum
     {
         None = 0,
@@ -72,20 +60,6 @@ namespace Merkit.BRC.RPA
         
     }
 
-    public class EnterHungaryLogin
-    {
-        public int EnterHungaryLoginId { get; set; }
-        public string Email { get; set; }
-        public string PasswordText { get; set; }
-
-        public EnterHungaryLogin(int enterHungaryLoginId, string email, string passwordText) 
-        {
-            this.EnterHungaryLoginId = enterHungaryLoginId;
-            this.Email = email;
-            this.PasswordText = passwordText;
-        }  
-    }
-
     /// <summary>
     /// BRC_Enterhungary input excel ellenőrzése
     /// </summary>
@@ -93,12 +67,9 @@ namespace Merkit.BRC.RPA
     {
         #region public változók
 
-        public static Dictionary<string, EnterHungaryLogin> enterHungaryLogins = new Dictionary<string, EnterHungaryLogin>(); // ügyintézők
-
         //  ** dropdown oszlopok kigyűjtése kódlista készítéshez
         public static Dictionary<string, List<string>> dropDownValuesbyType = new Dictionary<string, List<string>>();
         public static Dictionary<string, Dictionary<string, int>> dropDownIDsbyType = new Dictionary<string, Dictionary<string, int>>();
-        public static List<string> zipCodes = new List<string>();   
 
         public static int excelColNum = 0;
 
@@ -212,161 +183,6 @@ namespace Merkit.BRC.RPA
         #region Public függvények
 
         /// <summary>
-        /// Call InsertExcelFileProc stored procedure
-        /// </summary>
-        /// <param name="excelFileName"></param>
-        /// <param name="sqlManager"></param>
-        /// <param name="tr"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        public static int InsertExcelFileProc(string excelFileName, MSSQLManager sqlManager, SqlTransaction tr = null )
-        {
-            int result = -1;
-
-            try
-            {
-                result = sqlManager.ExecuteProcWithReturnValue(
-                    "InsertExcelFile",
-                    new Dictionary<string, object>() {
-                        { "@ExcelFileName", excelFileName },
-                        { "@RobotName", Environment.UserName }
-                    } ,
-                    tr);
-
-            }
-            catch (SqlException ex)
-            {
-                throw new Exception("SqlException: " + ex.Message);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Call InsertExcelSheetProc stored procedure
-        /// </summary>
-        /// <param name="excelFileId"></param>
-        /// <param name="excelSheetName"></param>
-        /// <param name="sqlManager"></param>
-        /// <param name="tr"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        public static int InsertExcelSheetProc(int excelFileId, string excelSheetName, MSSQLManager sqlManager, SqlTransaction tr = null)
-        {
-            int result = -1;
-
-            try
-            {
-                result = sqlManager.ExecuteProcWithReturnValue(
-                    "InsertExcelSheet",
-                    new Dictionary<string, object>() {
-                        { "@ExcelFileId", excelFileId },
-                        { "@ExcelSheetName", excelSheetName },
-                        { "@RobotName", Environment.UserName }
-                    },
-                    tr);
-
-            }
-            catch (SqlException ex)
-            {
-                sqlManager.Rollback(tr);
-                throw new Exception("SqlException: " + ex.Message);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Call InsertExcelSheetProc stored procedure
-        /// </summary>
-        /// <param name="excelFileId"></param>
-        /// <param name="excelSheetName"></param>
-        /// <param name="sqlManager"></param>
-        /// <param name="tr"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        public static int InsertExcelRowProc(int excelFileId, int excelSheetId, int excelRownNum, DataRow dr, MSSQLManager sqlManager, SqlTransaction tr = null)
-        {
-            string[] yesValues = { "igen", "yes", "true" };
-            int result = -1;
-            string colStrValue = "";
-            string dropdownValue = "";
-            int colIntValue = -1;
-            string ugyintezoValue = ExcelManager.GetDataRowValue(dr, "Ügyintéző").ToLower();
-
-            Dictionary<string, object> paramsDict = new Dictionary<string, object>()
-            {
-                { "@ExcelFileId", excelFileId },
-                { "@ExcelSheetId", excelSheetId },
-                { "@ExcelRowNum", excelRownNum },
-                { "@EnterHungaryLoginId", enterHungaryLogins[ugyintezoValue].EnterHungaryLoginId }
-                //{ "@RobotName", Environment.UserName }
-            };
-
-            // paraméterek összeállítása
-            foreach (ExcelCol excelCol in excelHeaders.Where(x => ! String.IsNullOrEmpty(x.SQLColName)))
-            {
-                colStrValue = dr[excelCol.ExcelColName].ToString();
-
-                // üres érték?
-                if (String.IsNullOrEmpty(colStrValue))
-                {
-                    paramsDict.Add("@" + excelCol.SQLColName, null);
-                }
-                else
-                {
-                    // dropdown?
-                    if(excelCol.ExcelColType == ExcelColTypeNum.Dropdown)
-                    {
-                        dropdownValue = dr[excelCol.ExcelColName].ToString().ToLower();
-
-                        try
-                        {
-                            colIntValue = dropDownIDsbyType[excelCol.ExcelColName][dropdownValue];
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new Exception(ex.Message + ". " + excelCol.ExcelColName + " -> " + dropdownValue);
-                        }
-
-                        paramsDict.Add("@" + excelCol.SQLColName, colIntValue);
-                    }
-                    else
-                    {
-                        if (excelCol.ExcelColType == ExcelColTypeNum.Date)
-                        {
-                            colStrValue = colStrValue.Length > 10 ? colStrValue.Replace(" ", "").Substring(0, 10) : colStrValue;
-                        }
-
-                        if (excelCol.ExcelColType == ExcelColTypeNum.YesNo)
-                        {
-                            colStrValue = yesValues.Contains(colStrValue.ToLower()) ? "1": "0";
-                        }
-
-                        paramsDict.Add("@" + excelCol.SQLColName, colStrValue);
-                    }
-                }
-
-            }
-
-            try
-            {
-                result = sqlManager.ExecuteProcWithReturnValue(
-                    "InsertExcelRow",
-                    paramsDict,
-                    tr);
-            }
-            catch (SqlException ex)
-            {
-                sqlManager.Rollback(tr);
-                throw new Exception("SqlException: " + ex.Message);
-            }
-
-            return result;
-        }
-
-
-        /// <summary>
         /// Excel Workbook Validator
         /// </summary>
         /// <param name="excelFileName"></param>
@@ -393,7 +209,7 @@ namespace Merkit.BRC.RPA
                     if (!sheetName.Contains("Referen"))
                     {
                         excelSheetHeaderChecking.Add(sheetName, ExcelSheetHeaderValidator(sheetName, sqlManager));
-                        int excelSheetId = InsertExcelSheetProc(excelFileId, sheetName, sqlManager, tr);
+                        int excelSheetId = Dispatcher.InsertExcelSheetProc(excelFileId, sheetName, sqlManager, tr);
                         excelSheets.Add(sheetName.Trim(), excelSheetId);
                     }
                 }
@@ -483,8 +299,8 @@ namespace Merkit.BRC.RPA
             Dictionary<string, string> dictExcelColumnNameToExcellCol = ExcelManager.GetExcelColumnNamesByDataTable(dt);
             string checkStatuscellName = dictExcelColumnNameToExcellCol["Ellenőrzés Státusz"];
 
-            LoadDropdownValuesFromSQL(sqlManager, dt, tr);
-            LoadZipCodeValuesFromSQL(sqlManager, dt, tr);
+            Dispatcher.LoadDropdownValuesFromSQL(sqlManager, dt, tr);
+            Dispatcher.LoadZipCodeValuesFromSQL(sqlManager, dt, tr);
             bool isRowOk = true;
             bool isGoodRow = false;
             string checkStatus = "";
@@ -537,7 +353,7 @@ namespace Merkit.BRC.RPA
                     // SQL-be írás kell?
                     if(isRowOk)
                     {
-                        int excelRowId = InsertExcelRowProc(excelFileId, excelSheetId, rowNum, currentRow, sqlManager, tr);
+                        int excelRowId = Dispatcher.InsertExcelRowProc(excelFileId, excelSheetId, rowNum, currentRow, sqlManager, tr);
                     }
 
                     //  var x = ExcelSheet.get_Range("C2").Style;
@@ -577,130 +393,6 @@ namespace Merkit.BRC.RPA
             return colNum;
         }
 
-        /// <summary>
-        /// A munkalapon lévő, a flowhoz szükséges dropdown elemek értékeit betölti SQL-ből
-        /// </summary>
-        /// <param name="sqlManager"></param>
-        /// <param name="dt"></param>
-        /// <returns></returns>
-        public static bool LoadDropdownValuesFromSQL(MSSQLManager sqlManager, System.Data.DataTable dt, SqlTransaction tr = null)
-        {
-            string cellValue = "";
-            string dropDownValue = "";
-
-            // dropdown oszlopok típusa alapján kódlista készítése
-            foreach (DataRow excelRow in dt.Rows)
-            {
-                foreach (string colName in dropDownValuesbyType.Keys)
-                {
-                    cellValue = excelRow[colName].ToString();
-
-                    if (!dropDownValuesbyType[colName].Contains(cellValue))
-                    {
-                        dropDownValuesbyType[colName].Add(cellValue);
-                    }
-                }
-            }
-
-            // dropdown oszlopok típusa alapján kódok kigyűjtése
-            string sqlParams = "";
-
-            foreach (string colName in dropDownValuesbyType.Keys)
-            {
-                if(!dropDownIDsbyType.ContainsKey(colName))
-                {
-                    dropDownIDsbyType.Add(colName, new Dictionary<string, int>());
-                }
-
-                List<string> sqlColNames = dropDownValuesbyType[colName];
-                string[] array = sqlColNames.ToArray();
-
-                if (array != null && array.Length > 0)
-                {
-                    for (int i = 0; i < array.Length; i++)
-                    {
-                        array[i] = String.Format("'{0}'", array[i]);
-                    }
-
-                    sqlParams = String.Join(",", array);
-                    string sqlCmd = String.Format("SELECT * FROM View_DropDowns WHERE ExcelColNames='{0}' AND DropDownValue IN ({1})", colName, sqlParams);
-                    dt = sqlManager.ExecuteQuery(sqlCmd, tr);
-
-                    foreach (DataRow dr in dt.Rows)
-                    {
-                        dropDownValue = dr["DropDownValue"].ToString().ToLower();
-
-                        if (!dropDownIDsbyType[colName].ContainsKey(dropDownValue))
-                        {
-                            dropDownIDsbyType[colName].Add(dropDownValue, Int32.Parse(dr["DropDownsValueId"].ToString()));
-                        }
-                    }
-                }
-
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// GetEnterHungaryLogins
-        /// </summary>
-        /// <param name="sqlManager"></param>
-        /// <returns></returns>
-        public static void GetEnterHungaryLogins(MSSQLManager sqlManager)
-        {
-            int enterHungaryLoginId = 0;
-            string email = "";
-            string passwordText = "";
-            System.Data.DataTable dt = sqlManager.ExecuteQuery("SELECT EnterHungaryLoginId, Email,PasswordText FROM EnterHungaryLogins WHERE Deleted=0");
-
-            foreach (DataRow row in dt.Rows)
-            {
-                enterHungaryLoginId = Convert.ToInt32(row[0]);
-                email = row[1].ToString().ToLower();
-                passwordText = row[2].ToString();
-                enterHungaryLogins.Add(email, new EnterHungaryLogin(enterHungaryLoginId, email, passwordText));
-            }
-
-            return;
-        }
-
-        /// <summary>
-        /// A munkalapon lévő, a flowhoz szükséges irányítószámok értékeit betölti SQL-ből
-        /// </summary>
-        /// <param name="sqlManager"></param>
-        /// <param name="dt"></param>
-        /// <returns></returns>
-        public static bool LoadZipCodeValuesFromSQL(MSSQLManager sqlManager, System.Data.DataTable dt, SqlTransaction tr = null)
-        {
-            string sqlCmd = "";
-            string cellValue = "";
-
-            // minden sorból kigyűjtés
-            foreach (DataRow excelRow in dt.Rows)
-            {
-                // aktuális sor irányítószám oszlopainak átnézése
-                foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRole == ExcelColRoleNum.ZipCode))
-                {
-                    cellValue = excelRow[col.ExcelColName].ToString();
-
-                    // nem volt még ilyen irányítószám kigyűjtve?
-                    if (! String.IsNullOrEmpty(cellValue) && ! zipCodes.Contains(cellValue))
-                    {
-                        sqlCmd = String.Format("SELECT COUNT(*) FROM ZipCodes WHERE ZipCode='{0}' AND DELETED=0", cellValue);
-
-                        // létező irányítószám?
-                        if (Convert.ToInt32(sqlManager.ExecuteScalar(sqlCmd, tr)) > 0)
-                        {
-                            zipCodes.Add(cellValue);
-                        }                        
-                    }
-                }
-            }
-
-            return true;
-        }
-
         #endregion
 
         #region Private függvények (oszloponkénti ellenőrzések)
@@ -718,17 +410,6 @@ namespace Merkit.BRC.RPA
             string cellName = "";
             bool isCellaValueOk = true;
             bool isRowOk = true;
-
-            // ** KSH szám ("\d\d\d\d\d\d\d\d \d\d\d\d \d\d\d [012]\d"  /12345678 1234 123 12/
-            //cellValue = ExcelManager.GetDataRowValue(currentRow, "KSH-szám").ToLower().Replace(" ", "");
-            //isCellaValueOk = Regex.IsMatch(cellValue, @"^\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d[012]\d$"); // ^\d{14}\d[012]\d$
-            //
-            //if (!isCellaValueOk)
-            //{
-            //    isRowOk = false;
-            //    cellName = fieldList["KSH-szám"] + rowNum.ToString();
-            //    ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
-            //}
 
             // ** címek összefüggései (A "Munkavállaló: Házszám" és "Munkavállaló: HRSZ" közül az egyik kötelező adat, és mindkettő egyszerre nem lehet kitöltve)
             cellValue = ExcelManager.GetDataRowValue(currentRow, "Munkavállaló: Házszám").ToLower();
@@ -780,7 +461,7 @@ namespace Merkit.BRC.RPA
             string colName = "Ügyintéző";
             string cellValue = ExcelManager.GetDataRowValue(currentRow, colName).ToLower();
             string cellName = fieldList[colName] + rowNum.ToString();
-            bool isCellValueOk = cellValue.Length>0 && enterHungaryLogins.ContainsKey(cellValue);
+            bool isCellValueOk = cellValue.Length>0 && Dispatcher.enterHungaryLogins.ContainsKey(cellValue);
             
             // ügyintéző létezik?
             if (!isCellValueOk)
@@ -829,7 +510,7 @@ namespace Merkit.BRC.RPA
         private static bool AllBoolFieldChecker(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
         {
             bool isRowValueOk = true;
-            string[] yesNoValues = { "igen", "nem", "yes", "no" };
+            string[] yesNoValues = { "igen", "nem", "yes", "no", "true", "false" };
 
             // dátum oszlopokon végigmenni
             foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRequired == ExcelColRequiredNum.Yes && x.ExcelColType == ExcelColTypeNum.YesNo))
@@ -1004,7 +685,7 @@ namespace Merkit.BRC.RPA
                     //var temp = dropDownIDsbyType[col.ExcelColName];
 
                     // nem létező érték?
-                    if (!zipCodes.Contains(cellValue))
+                    if (!Dispatcher.zipCodes.Contains(cellValue))
                     {
                         ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                         isCellValuesOk = false;
