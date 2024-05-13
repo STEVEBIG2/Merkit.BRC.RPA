@@ -1,4 +1,4 @@
-﻿-- Use BRC_Hungary_Test
+﻿-- Use BRC_Hungary_Test 
 -- GO
 
 -- DROP TABLE ExcelRows
@@ -115,21 +115,31 @@ GO
 ALTER TABLE QStatuses ADD PRIMARY KEY (QStatusId)
 GO
 
+-- DELETE FROM QStatuses
+-- GO
+
+-- General statuses
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (-2, 'Deleted')
+GO
 INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (-1, 'Locked')
 GO
+-- DisPatcher statuses
 INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (0, 'New')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (1, 'In Progress')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (1, 'Checking In Progress')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (2, 'Failed')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (2, 'Checked - Ok')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (3, 'SuccessFullExcel')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (3, 'Checked - Failed')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (4, 'SuccessFullRow')
+-- Performer statuses
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (11, 'Recording In Progress')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (5, 'Exported')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (12, 'Recording - Ok')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (6, 'Deleted')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (13, 'Recording - Failed')
+GO
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (14, 'Exported')
 GO
 
 -- ** ExcelFiles, ExcelSheets, ExcelRows
@@ -201,6 +211,8 @@ GO
 ALTER TABLE ExcelSheets CHECK CONSTRAINT FK_ExcelSheets_QStatuses
 GO
 
+CREATE INDEX IX3_ExcelSheets On ExcelSheets(ExcelFileId, ExcelSheetName)
+GO
 ---
 
 CREATE TABLE ExcelRows(

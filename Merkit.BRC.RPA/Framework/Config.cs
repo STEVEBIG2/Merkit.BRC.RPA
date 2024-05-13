@@ -20,8 +20,10 @@ namespace Merkit.RPA.PA.Framework
 
         public static string MsSqlHost { get; set; }
         public static string MsSqlDatabase { get; set; }
-        public static string LocalWorkFolder { get; set; }
+        
+        //public static string LocalWorkFolder { get; set; }
         //
+        
         public static string MsSqlUserName { get; set; }
         public static string MsSqlPassword { get; set; }
 

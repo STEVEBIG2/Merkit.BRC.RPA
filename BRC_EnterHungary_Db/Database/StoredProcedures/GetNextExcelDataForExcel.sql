@@ -1,17 +1,15 @@
 USE BRC_Hungary_Test
 GO
 
-/****** Object:  StoredProcedure [dbo].[GetNextExcelDataForExcel]    Script Date: 2020. 12. 01. 18:16:45 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
 
-
 -- =============================================  
 -- Author: Steve
--- Create date: 2024.04.09
+-- Create date: 2024.05.08
 -- Description: Get Next Excel Data For Excel
 -- ============================================= 
 CREATE PROCEDURE [dbo].[GetNextExcelDataForExcel]
@@ -29,7 +27,7 @@ BEGIN
    QStatusId=-1,
    QStatusTime=getdate(),
    @ExcelFileId=ExcelFileId   
-  WHERE ExcelFileId=(SELECT TOP 1 ExcelFileId FROM ExcelFiles Where ExcelType=@ExcelType AND QStatusId=3 ORDER BY ExcelFileId)
+  WHERE ExcelFileId=(SELECT TOP 1 ExcelFileId FROM ExcelFiles Where QStatusId=3 ORDER BY ExcelFileId)
 
  IF @ExcelFileId>-1
  Begin
@@ -39,7 +37,7 @@ BEGIN
      QStatusTime=getdate() 
     WHERE ExcelFileId=@ExcelFileId
 */
-	SELECT OUTPUTDATA FROM ExcelRows WHERE ExcelFileId=@ExcelFileId ORDER BY ExcelRowId
+	SELECT * FROM View_ExcelRows WHERE ExcelFileId=@ExcelFileId ORDER BY ExcelRowId
  End
  Else
  Begin

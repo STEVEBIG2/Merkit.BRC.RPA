@@ -1,13 +1,11 @@
 USE BRC_Hungary_Test
 GO
 
-/****** Object:  StoredProcedure [dbo].[SetAllStatusId]    Script Date: 2020. 12. 01. 18:16:39 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
-
 
 -- =============================================  
 -- Author: Steve

@@ -92,6 +92,38 @@ namespace Merkit.RPA.PA.Framework
         }
 
         /// <summary>
+        /// Save Excel File
+        /// </summary>
+        public static void SaveExcel()
+        {
+
+            try
+            {
+                if (ExcelWorkbook != null)
+                {
+                    ExcelWorkbook.Save();
+                }
+            }
+            finally
+            {
+                if (ExcelWorkbook != null)
+                {
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(ExcelWorkbook);
+                    ExcelWorkbook = null;
+                }
+
+                if (ExcelApp != null)
+                {
+                    ExcelApp.Quit();
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(ExcelApp);
+                    ExcelApp = null;
+                }
+
+            }
+
+        }
+
+        /// <summary>
         /// Close Excel File
         /// </summary>
         public static void CloseExcel()

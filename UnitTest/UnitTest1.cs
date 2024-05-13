@@ -139,8 +139,12 @@ namespace UnitTestProject1
         [TestMethod]
         public void TestDispatcherMainProcess()
         {
+            string rootDir = @"C:\RPA";
+            string inputDir = Path.Combine(rootDir, "Input");
+            string workDir = Path.Combine(rootDir, "Munka");
+
             InitConfig();
-            bool isOk = Dispatcher.MainProcess(ExcelFileName);
+            bool isOk = Dispatcher.MainProcess(inputDir, workDir);
             Assert.IsTrue(isOk);
         }
 
@@ -281,7 +285,7 @@ namespace UnitTestProject1
 
             System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
 
-            ExcelValidator.LoadDropdownValuesFromSQL(sqlManager, dt);
+            Dispatcher.LoadDropdownValuesFromSQL(sqlManager, dt);
 
             sqlManager.Disconnect();
             ExcelManager.CloseExcel();

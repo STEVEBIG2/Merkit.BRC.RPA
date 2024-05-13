@@ -7,7 +7,6 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-
 -- =============================================  
 -- Author: Steve
 -- Create date: 2024.04.09

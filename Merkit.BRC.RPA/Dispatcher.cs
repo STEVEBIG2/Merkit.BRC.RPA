@@ -1,5 +1,6 @@
 ﻿using Merkit.RPA.PA.Framework;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -12,14 +13,16 @@ namespace Merkit.BRC.RPA
 {
     public enum QStatusNum
     {
+        Deleted = -2,
         Locked = -1,
         New = 0,
-        InProgress = 1,
-        Failed = 2,
-        SuccessFullExcel = 3,
-        SuccessFullRow = 4,
-        Exported = 5,
-        Deleted = 6
+        CheckingInProgress = 1,
+        CheckedOk = 2,
+        CheckedFailed = 3,
+        RecordingInProgress = 11,
+        RecordingOk = 12,
+        RecordingFailed = 13,
+        Exported = 14
     };
 
     public class EnterHungaryLogin
@@ -41,34 +44,80 @@ namespace Merkit.BRC.RPA
         public static Dictionary<string, EnterHungaryLogin> enterHungaryLogins = new Dictionary<string, EnterHungaryLogin>(); // ügyintézők
         public static List<string> zipCodes = new List<string>();
 
+
+        private static System.Data.DataTable GetNextExcelFile(MSSQLManager sqlManager, string inputDir, string workDir)
+        {
+            int excelFileId = 0;
+            string excelFileName = "";
+            string sqlQuery = "SELECT TOP 1 ExcelFileId, ExcelFileName, QStatusId FROM ExcelFiles ";
+            sqlQuery += "WHERE QStatusId IN ({0},{1}) AND RobotName='{2}' ";
+            sqlQuery += "ORDER BY ExcelFileId";
+            sqlQuery = String.Format(sqlQuery, (int)QStatusNum.New, (int)QStatusNum.CheckingInProgress, Environment.UserName);
+            System.Data.DataTable dt = sqlManager.ExecuteQuery(sqlQuery);
+            
+            // nincs félbemaradt ellenörzött excel?
+            if(dt.Rows.Count == 0)
+            {
+                // Input mappából excel mozgatása a munka mappába?
+                excelFileName = FileManager.GetFileFromQueue(inputDir, "*.xlsx", workDir);
+
+                if(! String.IsNullOrEmpty(excelFileName))
+                {
+                    Framework.Logger(0, "MainProcess", "Info", "", "GetNextExcelFile", "Nincs több feldolgozandó excel file!");
+                }
+                else
+                {
+                    //betenni az SQL-be
+                    excelFileId = InsertExcelFileProc(excelFileName, sqlManager);
+                    sqlQuery = "SELECT TOP 1 ExcelFileId, ExcelFileName, QStatusId FROM ExcelFiles ";
+                    sqlQuery += "WHERE ExcelFileId={0}";
+                    sqlQuery = String.Format(sqlQuery, excelFileId);
+                    dt = sqlManager.ExecuteQuery(sqlQuery);
+                }
+
+            }
+            else
+            {
+                excelFileName = dt.Rows[0]["ExcelFileName"].ToString();
+
+                // nem létezik az excel file?
+                if(! File.Exists(excelFileName))
+                {
+                    throw new Exception(String.Format("Nem létező feldolgozandó excel file: {0}", excelFileName));
+                }
+            }
+
+            return dt;
+        }
+
         /// <summary>
         /// Dispatcher Main Process
         /// </summary>
         /// <returns></returns>
-        public static bool MainProcess(string excelFileName)
+        public static bool MainProcess(string inputDir, string workDir)
         {
             bool processOk = false;
-            MSSQLManager sqlManager = new MSSQLManager();
+            MSSQLManager sqlManager = InitDispatcher();
             SqlTransaction tr = null;
-            sqlManager.ConnectByConfig();
 
             try
             {
-                // ügyintéző login adatok begyűjtése
-                GetEnterHungaryLogins(sqlManager);
+                System.Data.DataTable dt = GetNextExcelFile(sqlManager, inputDir, workDir);
 
-                // *** dropdown lista ellenőrzéshez előkészülés
-                foreach (ExcelCol col in ExcelValidator.excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Dropdown && x.ExcelColRole != ExcelColRoleNum.ZipCode))
+                while(dt.Rows.Count > 0)
                 {
-                    ExcelValidator.dropDownValuesbyType.Add(col.ExcelColName, new List<string>());
+                    string excelFileName = dt.Rows[0]["ExcelFileName"].ToString();
+                    int excelFileId = Convert.ToInt32(dt.Rows[0]["ExcelFileId"]);
+
+                    // excel feldolgozás
+                    //tr = sqlManager.BeginTransaction();
+                    processOk = ExcelValidator.ExcelWorkbookValidator(excelFileName, excelFileId, sqlManager);
+                    //sqlManager.Commit(tr);
+
+                    // következő excel
+                    dt = GetNextExcelFile(sqlManager, inputDir, workDir);
                 }
 
-                // excel feldolgozás
-                tr = sqlManager.BeginTransaction();
-                int excelFileId = InsertExcelFileProc(excelFileName, sqlManager, tr);
-                processOk = ExcelValidator.ExcelWorkbookValidator(excelFileName, excelFileId, sqlManager, tr);
-
-                sqlManager.Commit(tr);
             }
             catch (Exception ex)
             {
@@ -90,6 +139,37 @@ namespace Merkit.BRC.RPA
         }
 
         /// <summary>
+        /// Init Dispatcher
+        /// </summary>
+        /// <returns></returns>
+        private static MSSQLManager InitDispatcher()
+        {
+            MSSQLManager sqlManager = new MSSQLManager();
+
+            try
+            {
+                sqlManager.ConnectByConfig();
+
+                // ügyintéző login adatok begyűjtése
+                GetEnterHungaryLogins(sqlManager);
+
+                // *** dropdown lista ellenőrzéshez előkészülés
+                foreach (ExcelCol col in ExcelValidator.excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Dropdown && x.ExcelColRole != ExcelColRoleNum.ZipCode))
+                {
+                    ExcelValidator.dropDownValuesbyType.Add(col.ExcelColName, new List<string>());
+                }
+
+            }
+            catch (Exception ex)
+            {
+                sqlManager = null;
+                throw new Exception(String.Format("InitDispatcher hiba: {0}", ex.Message));
+            }
+
+            return sqlManager;
+        }
+
+        /// <summary>
         /// GetEnterHungaryLogins
         /// </summary>
         /// <param name="sqlManager"></param>
@@ -99,7 +179,7 @@ namespace Merkit.BRC.RPA
             int enterHungaryLoginId = 0;
             string email = "";
             string passwordText = "";
-            System.Data.DataTable dt = sqlManager.ExecuteQuery("SELECT EnterHungaryLoginId, Email,PasswordText FROM EnterHungaryLogins WHERE Deleted=0");
+            System.Data.DataTable dt = sqlManager.ExecuteQuery("SELECT EnterHungaryLoginId, Email, PasswordText FROM EnterHungaryLogins WHERE Deleted=0");
 
             foreach (DataRow row in dt.Rows)
             {
@@ -244,16 +324,18 @@ namespace Merkit.BRC.RPA
             return result;
         }
 
+
         /// <summary>
         /// Call InsertExcelSheetProc stored procedure
         /// </summary>
         /// <param name="excelFileId"></param>
         /// <param name="excelSheetName"></param>
+        /// <param name="qStatusId"></param>
         /// <param name="sqlManager"></param>
         /// <param name="tr"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public static int InsertExcelSheetProc(int excelFileId, string excelSheetName, MSSQLManager sqlManager, SqlTransaction tr = null)
+        public static int InsertExcelSheetProc(int excelFileId, string excelSheetName, int qStatusId, MSSQLManager sqlManager, SqlTransaction tr = null)
         {
             int result = -1;
 
@@ -264,6 +346,7 @@ namespace Merkit.BRC.RPA
                     new Dictionary<string, object>() {
                         { "@ExcelFileId", excelFileId },
                         { "@ExcelSheetName", excelSheetName },
+                        { "@QStatusId", qStatusId },
                         { "@RobotName", Environment.UserName }
                     },
                     tr);

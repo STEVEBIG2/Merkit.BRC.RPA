@@ -190,16 +190,22 @@ namespace Merkit.BRC.RPA
         /// <param name="sqlManager"></param>
         /// <param name="tr"></param>
         /// <returns></returns>
-        public static bool ExcelWorkbookValidator(string excelFileName, int excelFileId, MSSQLManager sqlManager, SqlTransaction tr = null)
+        public static bool ExcelWorkbookValidator(string excelFileName, int excelFileId, MSSQLManager sqlManager)
         {
             Framework.Logger(0, "ExcelHeaderValidator", "Info", "", "-", String.Format("{0} file ellenőrzése elkezdődött.", excelFileName));
             Dictionary<string, bool> excelSheetHeaderChecking = new Dictionary<string, bool>();
             Dictionary<string, int> excelSheets = new Dictionary<string, int>();
+            bool headerOk = false;
+            object retValue = 0;
+            int excelSheetId = 0;
             bool isOk = ExcelManager.OpenExcel(excelFileName);
 
             // Excel megnyitása sikeres?
             if (isOk)
             {
+                sqlManager.ExecuteNonQuery(
+                    String.Format(String.Format("UPDATE ExcelFiles SET QStatusId={0}, QStatusTime=getdate() WHERE ExcelFileId={1}",  (int)QStatusNum.CheckingInProgress), excelFileId));
+
                 List<string> sheetNames = ExcelManager.WorksheetNames();
 
                 // munkalapok fejléceinek ellenőrzése
@@ -208,9 +214,23 @@ namespace Merkit.BRC.RPA
                     // EH adatokat tartalmazhat?
                     if (!sheetName.Contains("Referen"))
                     {
-                        excelSheetHeaderChecking.Add(sheetName, ExcelSheetHeaderValidator(sheetName, sqlManager));
-                        int excelSheetId = Dispatcher.InsertExcelSheetProc(excelFileId, sheetName, sqlManager, tr);
-                        excelSheets.Add(sheetName.Trim(), excelSheetId);
+                        // le lett már ellenőrizve?
+                        retValue = sqlManager.ExecuteScalar(
+                            String.Format("SELECT COUNT(*) FROM ExcelSheets WHERE ExcelFileId={0} AND ExcelSheetName='{1}'", excelFileId, sheetName));
+
+                        // aktuális munkalap fejléceinek ellenőrzése
+                        if (Convert.ToInt32(retValue) == 0)
+                        {
+                            headerOk = ExcelSheetHeaderValidator(sheetName);
+                            excelSheetId = Dispatcher.InsertExcelSheetProc(excelFileId, sheetName, headerOk ? (int)QStatusNum.New : (int)QStatusNum.CheckedFailed, sqlManager);
+
+                            if (excelSheetId > 0)
+                            {
+                                excelSheetHeaderChecking.Add(sheetName, headerOk);
+                                excelSheets.Add(sheetName.Trim(), excelSheetId);
+                            }
+                        }
+                          
                     }
                 }
 
@@ -220,11 +240,19 @@ namespace Merkit.BRC.RPA
                     ExcelSheetRowsValidator(excelFileId, excelSheets[goodSheetNameItem.Key], goodSheetNameItem.Key, sqlManager, tr);
                 }
 
+                sqlManager.ExecuteNonQuery(
+                    String.Format(String.Format("UPDATE ExcelFiles SET QStatusId={0}, QStatusTime=getdate() WHERE ExcelFileId={1}", (int)QStatusNum.CheckedOk), excelFileId),
+                    null,
+                    tr);
+
                 ExcelManager.CloseExcel();
                 Framework.Logger(0, "ExcelHeaderValidator", "Info", "", "-", String.Format("{0} file ellenőrzése sikeresen befejeződött.", excelFileName));
             }
             else
             {
+                sqlManager.ExecuteNonQuery(
+                    String.Format(String.Format("UPDATE ExcelFiles SET QStatusId={0}, QStatusTime=getdate() WHERE ExcelFileId={1}", (int)QStatusNum.CheckedFailed), excelFileId));
+
                 Framework.Logger(0, "ExcelHeaderValidator", "Err", "", "-", String.Format("{0} file ellenőrzése sikertelen volt.", excelFileName));
             }
 
@@ -236,7 +264,7 @@ namespace Merkit.BRC.RPA
         /// </summary>
         /// <param name="sheetName"></param>
         /// <returns></returns>
-        public static bool ExcelSheetHeaderValidator(string sheetName, MSSQLManager sqlManager)
+        public static bool ExcelSheetHeaderValidator(string sheetName)
         {
             Framework.Logger(0, "ExcelSheetHeaderValidator", "Info", "", "-", String.Format("A(z) {0} munkalap fejléc ellenőrzése elkezdődött.", sheetName));
             // megadott munkalap beolvasása
@@ -274,6 +302,7 @@ namespace Merkit.BRC.RPA
                 ExcelManager.ExcelSheet.Rows[1].Insert();
                 ExcelManager.SetCellValue("A1", "Hibás excel: hiányzó oszlopok. A hiányzó oszlopok világos korall színű fejléccel be lettek szúrva.");
                 ExcelManager.SetRangeColor("A1", "E1", System.Drawing.Color.Red);
+                ExcelManager.SaveExcel();
             }
 
             Framework.Logger(0, "A(z) ExcelSheetHeaderValidator", "Info", "", "-", String.Format("{0} munkalap fejléc ellenőrzése befejeződött.", sheetName));
@@ -289,7 +318,7 @@ namespace Merkit.BRC.RPA
         /// <param name="sqlManager"></param>
         /// <param name="tr"></param>
         /// <returns></returns>
-        public static bool ExcelSheetRowsValidator(int excelFileId, int excelSheetId, string sheetName, MSSQLManager sqlManager, SqlTransaction tr = null)
+        public static bool ExcelSheetRowsValidator(int excelFileId, int excelSheetId, string sheetName, MSSQLManager sqlManager)
         {
             Framework.Logger(0, "ExcelSheetRowsValidator", "Info", "", "-", String.Format("A(z) {0} munkalap sorainak ellenőrzése elkezdődött.", sheetName));
 
