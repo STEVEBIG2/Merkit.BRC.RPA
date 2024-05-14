@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -193,8 +194,8 @@ namespace Merkit.BRC.RPA
         public static bool ExcelWorkbookValidator(string excelFileName, int excelFileId, MSSQLManager sqlManager)
         {
             Framework.Logger(0, "ExcelHeaderValidator", "Info", "", "-", String.Format("{0} file ellenőrzése elkezdődött.", excelFileName));
-            Dictionary<string, bool> excelSheetHeaderChecking = new Dictionary<string, bool>();
             Dictionary<string, int> excelSheets = new Dictionary<string, int>();
+            string sqlString = "";
             bool headerOk = false;
             object retValue = 0;
             int excelSheetId = 0;
@@ -203,48 +204,30 @@ namespace Merkit.BRC.RPA
             // Excel megnyitása sikeres?
             if (isOk)
             {
-                sqlManager.ExecuteNonQuery(
-                    String.Format(String.Format("UPDATE ExcelFiles SET QStatusId={0}, QStatusTime=getdate() WHERE ExcelFileId={1}",  (int)QStatusNum.CheckingInProgress), excelFileId));
+                sqlString = String.Format(String.Format("UPDATE ExcelFiles SET QStatusId={0}, QStatusTime=getdate() WHERE ExcelFileId={1}", (int)QStatusNum.CheckingInProgress, excelFileId));
+                sqlManager.ExecuteNonQuery(sqlString);
 
                 List<string> sheetNames = ExcelManager.WorksheetNames();
 
                 // munkalapok fejléceinek ellenőrzése
-                foreach (string sheetName in sheetNames)
+                foreach (string sheetName in sheetNames.Where(x => !x.Contains("Referen")))
                 {
-                    // EH adatokat tartalmazhat?
-                    if (!sheetName.Contains("Referen"))
+                    // le lett már ellenőrizve a fejléc?
+                    sqlString = String.Format("SELECT COUNT(*) FROM ExcelSheets WHERE ExcelFileId={0} AND ExcelSheetName='{1}'", excelFileId, sheetName);
+                    retValue = sqlManager.ExecuteScalar(sqlString);
+
+                    // ha nem volt még ellenőrizve, aktuális munkalap fejléceinek ellenőrzése
+                    if (Convert.ToInt32(retValue) == 0)
                     {
-                        // le lett már ellenőrizve?
-                        retValue = sqlManager.ExecuteScalar(
-                            String.Format("SELECT COUNT(*) FROM ExcelSheets WHERE ExcelFileId={0} AND ExcelSheetName='{1}'", excelFileId, sheetName));
-
-                        // aktuális munkalap fejléceinek ellenőrzése
-                        if (Convert.ToInt32(retValue) == 0)
-                        {
-                            headerOk = ExcelSheetHeaderValidator(sheetName);
-                            excelSheetId = Dispatcher.InsertExcelSheetProc(excelFileId, sheetName, headerOk ? (int)QStatusNum.New : (int)QStatusNum.CheckedFailed, sqlManager);
-
-                            if (excelSheetId > 0)
-                            {
-                                excelSheetHeaderChecking.Add(sheetName, headerOk);
-                                excelSheets.Add(sheetName.Trim(), excelSheetId);
-                            }
-                        }
-                          
-                    }
+                        headerOk = ExcelSheetHeaderValidator(sheetName);
+                        excelSheetId = Dispatcher.InsertExcelSheetProc(excelFileId, sheetName, headerOk ? (int)QStatusNum.New : (int)QStatusNum.CheckedFailed, sqlManager);
+                    }                          
                 }
 
-                // munkalapok sorainak ellenőrzése
-                foreach(KeyValuePair<string, bool> goodSheetNameItem in excelSheetHeaderChecking.Where(x => x.Value))
-                {
-                    ExcelSheetRowsValidator(excelFileId, excelSheets[goodSheetNameItem.Key], goodSheetNameItem.Key, sqlManager, tr);
-                }
-
-                sqlManager.ExecuteNonQuery(
-                    String.Format(String.Format("UPDATE ExcelFiles SET QStatusId={0}, QStatusTime=getdate() WHERE ExcelFileId={1}", (int)QStatusNum.CheckedOk), excelFileId),
-                    null,
-                    tr);
-
+                // összes munkalap sorainak ellenőrzése
+                isOk = ExcelAllSheetRowsValidator(excelFileId, sqlManager); 
+                sqlString = String.Format(String.Format("UPDATE ExcelFiles SET QStatusId={0}, QStatusTime=getdate() WHERE ExcelFileId={1}", (int)QStatusNum.CheckedOk), excelFileId);
+                sqlManager.ExecuteNonQuery(sqlString);
                 ExcelManager.CloseExcel();
                 Framework.Logger(0, "ExcelHeaderValidator", "Info", "", "-", String.Format("{0} file ellenőrzése sikeresen befejeződött.", excelFileName));
             }
@@ -310,6 +293,33 @@ namespace Merkit.BRC.RPA
         }
 
         /// <summary>
+        /// Excel All Sheet Rows Validator
+        /// </summary>
+        /// <param name="excelFileId"></param>
+        /// <param name="sqlManager"></param>
+        /// <returns></returns>
+        public static bool ExcelAllSheetRowsValidator(int excelFileId, MSSQLManager sqlManager)
+        {
+            bool isOk = true;
+            int excelSheetId = 0;   
+
+            // munkalapok sorainak ellenőrzése
+            string excelSheetName = "";
+            string sqlString = String.Format("SELECT * FROM ExcelSheets WHERE ExcelFileId={0} AND QStatusId IN ({1}, {2}) ORDER BY ExcelSheetId", excelFileId, (int)QStatusNum.New, (int)QStatusNum.CheckingInProgress);
+            System.Data.DataTable dtExcelSheets = sqlManager.ExecuteQuery(sqlString);
+
+            // részben vagy teljesen ellenőrizetlen munkalapok
+            foreach (DataRow sheetRow in dtExcelSheets.Rows)
+            {
+                excelSheetId = Convert.ToInt32(sheetRow["ExcelSheetId"]);
+                excelSheetName = sheetRow["ExcelSheetName"].ToString();
+                ExcelSheetRowsValidator(excelFileId, excelSheetId, excelSheetName, sqlManager);
+            }
+
+            return isOk;
+        }
+
+        /// <summary>
         /// Excel Rows Validator
         /// </summary>
         /// <param name="excelFileId"></param>
@@ -320,6 +330,11 @@ namespace Merkit.BRC.RPA
         /// <returns></returns>
         public static bool ExcelSheetRowsValidator(int excelFileId, int excelSheetId, string sheetName, MSSQLManager sqlManager)
         {
+            bool isRowOk = true;
+            bool isGoodRow = false;
+            string checkStatus = "";
+            int rowNum = 1;
+
             Framework.Logger(0, "ExcelSheetRowsValidator", "Info", "", "-", String.Format("A(z) {0} munkalap sorainak ellenőrzése elkezdődött.", sheetName));
 
             // megadott munkalap beolvasása
@@ -328,74 +343,82 @@ namespace Merkit.BRC.RPA
             Dictionary<string, string> dictExcelColumnNameToExcellCol = ExcelManager.GetExcelColumnNamesByDataTable(dt);
             string checkStatuscellName = dictExcelColumnNameToExcellCol["Ellenőrzés Státusz"];
 
-            Dispatcher.LoadDropdownValuesFromSQL(sqlManager, dt, tr);
-            Dispatcher.LoadZipCodeValuesFromSQL(sqlManager, dt, tr);
-            bool isRowOk = true;
-            bool isGoodRow = false;
-            string checkStatus = "";
-            int rowNum = 1;
+            Dispatcher.LoadDropdownValuesFromSQL(sqlManager, dt);
+            Dispatcher.LoadZipCodeValuesFromSQL(sqlManager, dt);
 
-            // összes sor 
-            foreach (DataRow currentRow in dt.Rows)
+            SqlTransaction tr = sqlManager.BeginTransaction();
+
+            try
             {
-                isRowOk = true;
-                rowNum++;
-                checkStatus = ExcelManager.GetDataRowValue(currentRow, "Ellenőrzés Státusz");
-
-                // nem ellenőrzött sor?
-                if (String.IsNullOrEmpty(checkStatus))
+                // összes sor ellenörző ciklus
+                foreach (DataRow currentRow in dt.Rows)
                 {
-                    // kötelező szöveges oszlopok ellenőrzése
-                    isRowOk = isRowOk & AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+                    isRowOk = true;
+                    rowNum++;
+                    checkStatus = ExcelManager.GetDataRowValue(currentRow, "Ellenőrzés Státusz");
 
-                    // kötelező igen/nem oszlopok ellenőrzése
-                    isRowOk = isRowOk & AllBoolFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                    // regex szöveges oszlopok ellenőrzése
-                    isRowOk = isRowOk & AllRegexFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                    // Dátum átalakítás és ellenőrzés
-                    isRowOk = isRowOk & AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                    // link értékek ellenőrzése
-                    isRowOk = isRowOk & AllLinkCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                    // ügyintéző ellenőrzése
-                    isRowOk = isRowOk & AdministratorChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                    // irányítószámok ellenőrzése
-                    isRowOk = isRowOk & AllZipCodeCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                    // Nőtlen v. hajadon -> Nőtlen/hajadon
-                    isRowOk = isRowOk & CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                    // legördülő értékek ellenőrzése
-                    isRowOk = isRowOk & AllDropdownCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                    // egyéb üzleti szabályok ellenőrzése
-                    isRowOk = isRowOk & AllExtraBusinessRuleCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                    // Ellenőrzés státusz állítása
-                    checkStatus = isRowOk ? "OK" : "Hibás";
-                    ExcelManager.SetCellValue(checkStatuscellName + rowNum.ToString(), checkStatus);
-
-                    // SQL-be írás kell?
-                    if(isRowOk)
+                    // nem ellenőrzött sor?
+                    if (String.IsNullOrEmpty(checkStatus))
                     {
-                        int excelRowId = Dispatcher.InsertExcelRowProc(excelFileId, excelSheetId, rowNum, currentRow, sqlManager, tr);
+                        // kötelező szöveges oszlopok ellenőrzése
+                        isRowOk = isRowOk & AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                        // kötelező igen/nem oszlopok ellenőrzése
+                        isRowOk = isRowOk & AllBoolFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                        // regex szöveges oszlopok ellenőrzése
+                        isRowOk = isRowOk & AllRegexFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                        // Dátum átalakítás és ellenőrzés
+                        isRowOk = isRowOk & AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                        // link értékek ellenőrzése
+                        isRowOk = isRowOk & AllLinkCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                        // ügyintéző ellenőrzése
+                        isRowOk = isRowOk & AdministratorChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                        // irányítószámok ellenőrzése
+                        isRowOk = isRowOk & AllZipCodeCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                        // Nőtlen v. hajadon -> Nőtlen/hajadon
+                        isRowOk = isRowOk & CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                        // legördülő értékek ellenőrzése
+                        isRowOk = isRowOk & AllDropdownCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                        // egyéb üzleti szabályok ellenőrzése
+                        isRowOk = isRowOk & AllExtraBusinessRuleCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+                        // Ellenőrzés státusz állítása
+                        checkStatus = isRowOk ? "OK" : "Hibás";
+                        ExcelManager.SetCellValue(checkStatuscellName + rowNum.ToString(), checkStatus);
+
+                        // SQL-be írás kell?
+                        if (isRowOk)
+                        {
+                            int excelRowId = Dispatcher.InsertExcelRowProc(excelFileId, excelSheetId, rowNum, currentRow, sqlManager, tr);
+                        }
+
+                        //  var x = ExcelSheet.get_Range("C2").Style;
+                    }
+                    else
+                    {
+                        isRowOk = checkStatus.ToLower().Equals("ok");
                     }
 
-                    //  var x = ExcelSheet.get_Range("C2").Style;
-                }
-                else
-                {
-                    isRowOk = checkStatus.ToLower().Equals("ok");
+                    isGoodRow = isGoodRow || isRowOk; // van legalább egy jó sor
                 }
 
-                isGoodRow = isGoodRow || isRowOk; // van legalább egy jó sor
+                Framework.Logger(0, "ExcelSheetRowsValidator", "Info", "", "-", String.Format("A(z) {0} munkalap sorainak ellenőrzése befejeződött .", sheetName));
+                tr.Commit();
+                ExcelManager.SaveExcel();
             }
-
-            Framework.Logger(0, "ExcelSheetRowsValidator", "Info", "", "-", String.Format("A(z) {0} munkalap sorainak ellenőrzése befejeződött .", sheetName));
+            catch (Exception ex )
+            {
+                tr.Rollback();
+                throw new Exception(ex.Message);
+            }
             return isGoodRow;
         }
 

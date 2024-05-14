@@ -97,37 +97,31 @@ namespace Merkit.BRC.RPA
         public static bool MainProcess(string inputDir, string workDir)
         {
             bool processOk = false;
+            string excelFileName = "";
+            int excelFileId = 0;
             MSSQLManager sqlManager = InitDispatcher();
-            SqlTransaction tr = null;
 
             try
             {
                 System.Data.DataTable dt = GetNextExcelFile(sqlManager, inputDir, workDir);
 
+                // excel file-ok feldolgozása
                 while(dt.Rows.Count > 0)
                 {
-                    string excelFileName = dt.Rows[0]["ExcelFileName"].ToString();
-                    int excelFileId = Convert.ToInt32(dt.Rows[0]["ExcelFileId"]);
-
                     // excel feldolgozás
-                    //tr = sqlManager.BeginTransaction();
+                    excelFileName = dt.Rows[0]["ExcelFileName"].ToString();
+                    excelFileId = Convert.ToInt32(dt.Rows[0]["ExcelFileId"]);
                     processOk = ExcelValidator.ExcelWorkbookValidator(excelFileName, excelFileId, sqlManager);
-                    //sqlManager.Commit(tr);
 
                     // következő excel
                     dt = GetNextExcelFile(sqlManager, inputDir, workDir);
                 }
 
+                processOk = true;
             }
             catch (Exception ex)
             {
                 Framework.Logger(0, "MainProcess", "Err", "", "-", String.Format("MainProcess hiba: {0}", ex.Message));
-
-                if (tr != null)
-                {
-                    sqlManager.Rollback(tr);
-                }
-
                 throw new Exception(ex.Message); ;
             }
             finally
