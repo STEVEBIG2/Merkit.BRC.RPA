@@ -20,6 +20,7 @@ using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using UnitTest;
 using System.Data.SqlTypes;
+using Excel = Microsoft.Office.Interop.Excel;
 
 namespace UnitTestProject1
 {
@@ -134,6 +135,32 @@ namespace UnitTestProject1
             // return isWorkDay;
 
             Assert.IsTrue(true);
+        }
+
+        [TestMethod]
+        public void TestCopyExcelRow()
+        {
+            string excelFileName = @"C:\Munka\Teszt_adatok.xlsx";
+            bool isOk = ExcelManager.OpenExcel(excelFileName);
+
+            if(isOk)
+            {
+                ExcelManager.SelectWorksheetByName("Munka1");
+                int lastRow = ExcelManager.LastRow();
+                int lastColumn = ExcelManager.LastColumn();
+
+                Range copyRange = ExcelManager.ReadEntireRow("A1");
+
+                ExcelManager.SelectWorksheetByName("Munka2");
+                Range dest = ExcelManager.GetCellRange("A1");
+
+                copyRange.Copy(dest);
+                ExcelManager.AutoFit();
+
+                ExcelManager.CloseExcel();
+            }
+            
+            Assert.IsTrue(isOk);
         }
 
         [TestMethod]

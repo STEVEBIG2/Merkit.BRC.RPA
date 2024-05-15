@@ -334,7 +334,6 @@ namespace Merkit.BRC.RPA
             bool isGoodRow = false;
             string checkStatus = "";
             int rowNum = 1;
-
             Framework.Logger(0, "ExcelSheetRowsValidator", "Info", "", "-", String.Format("A(z) {0} munkalap sorainak ellenőrzése elkezdődött.", sheetName));
 
             // megadott munkalap beolvasása
@@ -342,7 +341,6 @@ namespace Merkit.BRC.RPA
             System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
             Dictionary<string, string> dictExcelColumnNameToExcellCol = ExcelManager.GetExcelColumnNamesByDataTable(dt);
             string checkStatuscellName = dictExcelColumnNameToExcellCol["Ellenőrzés Státusz"];
-
             Dispatcher.LoadDropdownValuesFromSQL(sqlManager, dt);
             Dispatcher.LoadZipCodeValuesFromSQL(sqlManager, dt);
 
@@ -360,47 +358,15 @@ namespace Merkit.BRC.RPA
                     // nem ellenőrzött sor?
                     if (String.IsNullOrEmpty(checkStatus))
                     {
-                        // kötelező szöveges oszlopok ellenőrzése
-                        isRowOk = isRowOk & AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                        // kötelező igen/nem oszlopok ellenőrzése
-                        isRowOk = isRowOk & AllBoolFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                        // regex szöveges oszlopok ellenőrzése
-                        isRowOk = isRowOk & AllRegexFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                        // Dátum átalakítás és ellenőrzés
-                        isRowOk = isRowOk & AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                        // link értékek ellenőrzése
-                        isRowOk = isRowOk & AllLinkCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                        // ügyintéző ellenőrzése
-                        isRowOk = isRowOk & AdministratorChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                        // irányítószámok ellenőrzése
-                        isRowOk = isRowOk & AllZipCodeCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                        // Nőtlen v. hajadon -> Nőtlen/hajadon
-                        isRowOk = isRowOk & CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                        // legördülő értékek ellenőrzése
-                        isRowOk = isRowOk & AllDropdownCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
-                        // egyéb üzleti szabályok ellenőrzése
-                        isRowOk = isRowOk & AllExtraBusinessRuleCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
-
+                        isRowOk = ExcelSheetCurrentRowValidator(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
                         // Ellenőrzés státusz állítása
                         checkStatus = isRowOk ? "OK" : "Hibás";
                         ExcelManager.SetCellValue(checkStatuscellName + rowNum.ToString(), checkStatus);
-
-                        // SQL-be írás kell?
-                        if (isRowOk)
+                        
+                        if (isRowOk) // SQL-be írás kell?
                         {
                             int excelRowId = Dispatcher.InsertExcelRowProc(excelFileId, excelSheetId, rowNum, currentRow, sqlManager, tr);
                         }
-
-                        //  var x = ExcelSheet.get_Range("C2").Style;
                     }
                     else
                     {
@@ -420,6 +386,51 @@ namespace Merkit.BRC.RPA
                 throw new Exception(ex.Message);
             }
             return isGoodRow;
+        }
+
+
+        /// <summary>
+        /// Excel Sheet Current Row Validator
+        /// </summary>
+        /// <param name="currentRow"></param>
+        /// <param name="rowNum"></param>
+        /// <param name="dictExcelColumnNameToExcellCol"></param>
+        /// <returns></returns>
+        public static bool ExcelSheetCurrentRowValidator(DataRow currentRow, int rowNum, ref Dictionary<string, string> dictExcelColumnNameToExcellCol)
+        {
+            bool isRowOk = true;
+
+            // kötelező szöveges oszlopok ellenőrzése
+            isRowOk = isRowOk & AllRequiredFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+            // kötelező igen/nem oszlopok ellenőrzése
+            isRowOk = isRowOk & AllBoolFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+            // regex szöveges oszlopok ellenőrzése
+            isRowOk = isRowOk & AllRegexFieldChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+            // Dátum átalakítás és ellenőrzés
+            isRowOk = isRowOk & AllDateCheckAndConvert(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+            // link értékek ellenőrzése
+            isRowOk = isRowOk & AllLinkCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+            // ügyintéző ellenőrzése
+            isRowOk = isRowOk & AdministratorChecker(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+            // irányítószámok ellenőrzése
+            isRowOk = isRowOk & AllZipCodeCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+            // Nőtlen v. hajadon -> Nőtlen/hajadon
+            isRowOk = isRowOk & CsaladiAllapot(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+            // legördülő értékek ellenőrzése
+            isRowOk = isRowOk & AllDropdownCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+            // egyéb üzleti szabályok ellenőrzése
+            isRowOk = isRowOk & AllExtraBusinessRuleCheck(currentRow, rowNum, ref dictExcelColumnNameToExcellCol);
+
+            return isRowOk;
         }
 
         /// <summary>

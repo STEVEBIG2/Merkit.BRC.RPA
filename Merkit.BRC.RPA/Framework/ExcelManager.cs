@@ -157,6 +157,33 @@ namespace Merkit.RPA.PA.Framework
         }
 
         /// <summary>
+        /// Auto fit in current sheet
+        /// </summary>
+        public static void AutoFit()
+        {
+            ExcelManager.ExcelSheet.get_Range("A1").EntireRow.EntireColumn.AutoFit();
+        }
+
+        /// <summary>
+        /// Last Column index in current sheet
+        /// </summary>
+        /// <returns></returns>
+        public static int LastColumn()
+        {
+            return ExcelSheet.UsedRange.Columns.Count;
+        }
+
+        /// <summary>
+        /// Last Row index in current sheet
+        /// </summary>
+        /// <returns></returns>
+        public static int LastRow()
+        {
+            return ExcelSheet.UsedRange.Rows.Count;
+        }
+
+
+        /// <summary>
         /// Set Cel lValue by cell name
         /// </summary>
         /// <param name="cell"></param>
@@ -222,6 +249,28 @@ namespace Merkit.RPA.PA.Framework
         {
             string value = ExcelSheet.Cells[row, col].Value?.ToString();
             return value;
+        }
+
+        /// <summary>
+        /// Get range for specified cell
+        /// </summary>
+        /// <param name="startCell"></param>
+        /// <returns></returns>
+        public static Range GetCellRange(string startCell)
+        {
+            Range range = ExcelManager.ExcelSheet.get_Range(startCell);
+            return range;
+        }
+
+        /// <summary>
+        /// Read entire row from cell
+        /// </summary>
+        /// <param name="startCell"></param>
+        /// <returns></returns>
+        public static Range ReadEntireRow(string startCell)
+        {
+            Range range = GetCellRange(startCell).EntireRow;
+            return range;
         }
 
         /// <summary>
