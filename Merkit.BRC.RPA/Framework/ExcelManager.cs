@@ -74,9 +74,19 @@ namespace Merkit.RPA.PA.Framework
         /// <param name="sheetName"></param>
         public static void AddNewSheet(string worksheetName)
         {
+            List<string> sheetNames = WorksheetNames();
             ExcelManager.ExcelWorkbook.Worksheets.Add();
-            Worksheet oSheet = (Worksheet)ExcelManager.ExcelWorkbook.Worksheets[1];
-            oSheet.Name = worksheetName;
+
+            foreach (Worksheet worksheet in ExcelManager.ExcelWorkbook.Sheets)
+            {
+                if (!sheetNames.Contains(worksheet.Name))
+                {
+                    ExcelSheet = ExcelWorkbook.Sheets[worksheet.Name];
+                    ExcelSheet.Activate();
+                    ExcelSheet.Name = worksheetName;
+                    break;
+                }               
+            }          
         }
 
         /// <summary>
