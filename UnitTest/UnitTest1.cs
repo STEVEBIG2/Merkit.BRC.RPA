@@ -39,6 +39,7 @@ namespace UnitTestProject1
             Config.AppName = "UnitTest";
             Config.LogLevel = 0;
             Config.LogFileName = @"c:\Munka\Work\log_{0}.txt";
+            Config.NotifyEmail = "rendszergazda@merkit.hu";
             //
             Config.MsSqlHost = @"STEVE-LAPTOP\SQLEXPRESS";
             Config.MsSqlDatabase = "BRC_Hungary_Test";
@@ -138,26 +139,42 @@ namespace UnitTestProject1
         }
 
         [TestMethod]
-        public void TestCopyExcelRow()
+        public void TestCopyExcelRows()
         {
+            int lastRowMunka = 0;
+            int lastRowUj = 0;
+            Range dest;
+
             string excelFileName = @"C:\Munka\Teszt_adatok.xlsx";
             bool isOk = ExcelManager.OpenExcel(excelFileName);
 
             if(isOk)
             {
                 ExcelManager.SelectWorksheetByName("Munka1");
-                int lastRow = ExcelManager.LastRow();
-                int lastColumn = ExcelManager.LastColumn();
+                Range headerRange = ExcelManager.ReadEntireRow("A1");
+                lastRowMunka = ExcelManager.LastRow();
 
-                Range copyRange = ExcelManager.ReadEntireRow("A1");
+                for(int i = 2;  i<= lastRowMunka; i++)
+                {
+                    ExcelManager.SelectWorksheetByName("Munka1");
+                    Range copyRange = ExcelManager.ReadEntireRow("A"+ i.ToString());
+                    
+                    // létezik a munkalap?
+                    if(ExcelManager.AddNewSheetIfNotExist("Új"))
+                    {
+                        dest = ExcelManager.GetCellRange("A1");
+                        headerRange.Copy(dest);
+                    }
 
-                ExcelManager.SelectWorksheetByName("Munka2");
-                Range dest = ExcelManager.GetCellRange("A1");
+                    lastRowUj = ExcelManager.LastRow()+1;
+                    dest = ExcelManager.GetCellRange("A" + lastRowUj.ToString());
+                    copyRange.Copy(dest);
+                }
 
-                copyRange.Copy(dest);
+                ExcelManager.SelectWorksheetByName("Új");
                 ExcelManager.AutoFit();
 
-                ExcelManager.CloseExcel();
+                ExcelManager.SaveAndCloseExcel();
             }
             
             Assert.IsTrue(isOk);
@@ -315,7 +332,7 @@ namespace UnitTestProject1
             Dispatcher.LoadDropdownValuesFromSQL(sqlManager, dt);
 
             sqlManager.Disconnect();
-            ExcelManager.CloseExcel();
+            ExcelManager.CloseExcelWithoutSave();
 
             // Write value to Json file
             string path = @"C:\Munka\Log_UnitTest_{0}.txt";
@@ -440,7 +457,7 @@ namespace UnitTestProject1
 
             if (isOk)
             {
-                ExcelManager.CloseExcel();
+                ExcelManager.SaveAndCloseExcel();
             }
 
             Assert.IsTrue(isOk);

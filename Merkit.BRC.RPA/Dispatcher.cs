@@ -61,7 +61,7 @@ namespace Merkit.BRC.RPA
                 // Input mappából excel mozgatása a munka mappába?
                 excelFileName = FileManager.GetFileFromQueue(inputDir, "*.xlsx", workDir);
 
-                if(! String.IsNullOrEmpty(excelFileName))
+                if(String.IsNullOrEmpty(excelFileName))
                 {
                     Framework.Logger(0, "MainProcess", "Info", "", "GetNextExcelFile", "Nincs több feldolgozandó excel file!");
                 }

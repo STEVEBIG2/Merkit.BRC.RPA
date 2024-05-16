@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using DataTable = System.Data.DataTable;
 using Excel = Microsoft.Office.Interop.Excel;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Merkit.RPA.PA.Framework
 {
@@ -67,6 +68,34 @@ namespace Merkit.RPA.PA.Framework
             return sheetNames;
         }
 
+        /// <summary>
+        /// Add New Sheet into first position of workbook and activate
+        /// </summary>
+        /// <param name="sheetName"></param>
+        public static void AddNewSheet(string worksheetName)
+        {
+            ExcelManager.ExcelWorkbook.Worksheets.Add();
+            Worksheet oSheet = (Worksheet)ExcelManager.ExcelWorkbook.Worksheets[1];
+            oSheet.Name = worksheetName;
+        }
+
+        /// <summary>
+        /// Add New Sheet if not exists into first position of workbook and activate
+        /// </summary>
+        /// <param name="sheetName"></param>
+        public static bool AddNewSheetIfNotExist(string worksheetName)
+        {
+            bool isNewRow = false;
+
+            if(! WorksheetNames().Contains(worksheetName))
+            {
+                AddNewSheet(worksheetName);
+                isNewRow = true;
+            }
+
+            SelectWorksheetByName(worksheetName);
+            return isNewRow;
+        }
 
         /// <summary>
         /// Select Worksheet By Name
@@ -96,13 +125,21 @@ namespace Merkit.RPA.PA.Framework
         /// </summary>
         public static void SaveExcel()
         {
+            if (ExcelWorkbook != null)
+            {
+                ExcelWorkbook.Save();
+            }
+        }
+
+        /// <summary>
+        /// Save Excel File
+        /// </summary>
+        public static void SaveAndCloseExcel()
+        {
 
             try
             {
-                if (ExcelWorkbook != null)
-                {
-                    ExcelWorkbook.Save();
-                }
+                SaveExcel();
             }
             finally
             {
@@ -124,9 +161,9 @@ namespace Merkit.RPA.PA.Framework
         }
 
         /// <summary>
-        /// Close Excel File
+        /// Close Excel file without save
         /// </summary>
-        public static void CloseExcel()
+        public static void CloseExcelWithoutSave()
         {
 
             try
@@ -134,7 +171,7 @@ namespace Merkit.RPA.PA.Framework
                 if (ExcelWorkbook != null)
                 {
                     ExcelWorkbook.Save();
-                    ExcelWorkbook.Close(true);
+                    ExcelWorkbook.Close(false);
                 }
             }
             finally
@@ -162,6 +199,7 @@ namespace Merkit.RPA.PA.Framework
         public static void AutoFit()
         {
             ExcelManager.ExcelSheet.get_Range("A1").EntireRow.EntireColumn.AutoFit();
+            ExcelManager.ExcelSheet.get_Range("A1").EntireColumn.EntireRow.AutoFit();
         }
 
         /// <summary>
