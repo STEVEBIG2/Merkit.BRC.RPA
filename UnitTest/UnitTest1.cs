@@ -156,6 +156,20 @@ namespace UnitTestProject1
         }
 
         [TestMethod]
+        public void TestDeleteSheetIfExist()
+        {
+            bool isOk = excelManager.OpenExcel(ExcelFileName);
+
+            if (isOk)
+            {
+                excelManager.DeleteSheetIfExist("Sheet 2");
+                excelManager.SaveAndCloseExcel();
+            }
+
+            Assert.IsTrue(isOk);
+        }
+
+        [TestMethod]
         public void TestCopySheetToNewExcel()
         {
             bool isOk1 = excelManager.OpenExcel(ExcelFileName);
@@ -165,7 +179,7 @@ namespace UnitTestProject1
             {
                 // excelManager.ExcelSheet
                 excelManager.ReadEntireRow("A1");
-                excelManager2.SetRangeValues("A1", )
+                //excelManager2.SetRangeValues("A1", )
 
                 excelManager.SaveAndCloseExcel();
                 excelManager2.CloseExcelWithoutSave();

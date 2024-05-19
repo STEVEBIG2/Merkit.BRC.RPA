@@ -143,6 +143,18 @@ namespace Merkit.RPA.PA.Framework
         }
 
         /// <summary>
+        /// Delete sheet from workbook
+        /// </summary>
+        /// <param name="sheetName"></param>
+        public void DeleteSheetIfExist(string worksheetName)
+        {
+            if(SelectWorksheetByName(worksheetName))
+            {
+                ExcelSheet.Delete();
+            }
+        }
+
+        /// <summary>
         /// Select Worksheet By Name
         /// </summary>
         /// <param name="worksheetName"></param>
