@@ -11,12 +11,12 @@ using System.Linq;
 
 namespace Merkit.RPA.PA.Framework
 {
-    public static class ExcelManager
+    public class ExcelManager
     {
 
-        public static Excel.Application ExcelApp = null;
-        public static Excel.Workbook ExcelWorkbook = null;
-        public static Excel.Worksheet ExcelSheet = null;
+        public Excel.Application ExcelApp = null;
+        public Excel.Workbook ExcelWorkbook = null;
+        public Excel.Worksheet ExcelSheet = null;
 
         /// <summary>
         /// Open Excel file
@@ -24,7 +24,7 @@ namespace Merkit.RPA.PA.Framework
         /// <param name="excelFilename"></param>
         /// <param name="visible"></param>
         /// <returns></returns>
-        public static bool OpenExcel(string excelFilename, bool visible=true)
+        public bool OpenExcel(string excelFilename, bool visible=true)
         {
             bool retValue = false;
 
@@ -53,14 +53,49 @@ namespace Merkit.RPA.PA.Framework
         }
 
         /// <summary>
+        /// Create Excel file
+        /// </summary>
+        /// <param name="excelFilename"></param>
+        /// <param name="visible"></param>
+        /// <returns></returns>
+        public bool CreateExcel(string excelFilename, string sheetName, bool visible = true)
+        {
+            bool retValue = false;
+
+            try
+            {
+                if (!File.Exists(excelFilename))
+                {
+                    ExcelApp = new Excel.Application();
+                    ExcelApp.Visible = visible;
+                    ExcelApp.DisplayAlerts = false;
+                    ExcelWorkbook = ExcelApp.Workbooks.Add();
+                    ExcelWorkbook.SaveAs(excelFilename);
+
+                    ExcelSheet = (Worksheet)(ExcelWorkbook.Worksheets[1]);
+                    ExcelSheet.Activate();
+                    ExcelSheet.Name = sheetName;
+                }
+
+            }
+            finally
+            {
+                retValue = (ExcelWorkbook != null);
+            }
+
+            return retValue;
+
+        }
+
+        /// <summary>
         /// Get WorksheetNames
         /// </summary>
         /// <returns></returns>
-        public static List<string> WorksheetNames()
+        public List<string> WorksheetNames()
         {
             List<string> sheetNames = new List<string>();
 
-            foreach (Worksheet worksheet in ExcelManager.ExcelWorkbook.Sheets)
+            foreach (Worksheet worksheet in ExcelWorkbook.Sheets)
             {
                 sheetNames.Add(worksheet.Name);
             }
@@ -72,12 +107,12 @@ namespace Merkit.RPA.PA.Framework
         /// Add New Sheet into first position of workbook and activate
         /// </summary>
         /// <param name="sheetName"></param>
-        public static void AddNewSheet(string worksheetName)
+        public void AddNewSheet(string worksheetName)
         {
             List<string> sheetNames = WorksheetNames();
-            ExcelManager.ExcelWorkbook.Worksheets.Add();
+            ExcelWorkbook.Worksheets.Add();
 
-            foreach (Worksheet worksheet in ExcelManager.ExcelWorkbook.Sheets)
+            foreach (Worksheet worksheet in ExcelWorkbook.Sheets)
             {
                 if (!sheetNames.Contains(worksheet.Name))
                 {
@@ -93,7 +128,7 @@ namespace Merkit.RPA.PA.Framework
         /// Add New Sheet if not exists into first position of workbook and activate
         /// </summary>
         /// <param name="sheetName"></param>
-        public static bool AddNewSheetIfNotExist(string worksheetName)
+        public bool AddNewSheetIfNotExist(string worksheetName)
         {
             bool isNewRow = false;
 
@@ -112,7 +147,7 @@ namespace Merkit.RPA.PA.Framework
         /// </summary>
         /// <param name="worksheetName"></param>
         /// <returns></returns>
-        public static bool SelectWorksheetByName(string worksheetName)
+        public bool SelectWorksheetByName(string worksheetName)
         {
             bool retValue = true;
 
@@ -133,7 +168,7 @@ namespace Merkit.RPA.PA.Framework
         /// <summary>
         /// Save Excel File
         /// </summary>
-        public static void SaveExcel()
+        public void SaveExcel()
         {
             if (ExcelWorkbook != null)
             {
@@ -144,7 +179,7 @@ namespace Merkit.RPA.PA.Framework
         /// <summary>
         /// Save Excel File
         /// </summary>
-        public static void SaveAndCloseExcel()
+        public void SaveAndCloseExcel()
         {
 
             try
@@ -173,7 +208,7 @@ namespace Merkit.RPA.PA.Framework
         /// <summary>
         /// Close Excel file without save
         /// </summary>
-        public static void CloseExcelWithoutSave()
+        public void CloseExcelWithoutSave()
         {
 
             try
@@ -206,17 +241,17 @@ namespace Merkit.RPA.PA.Framework
         /// <summary>
         /// Auto fit in current sheet
         /// </summary>
-        public static void AutoFit()
+        public void AutoFit()
         {
-            ExcelManager.ExcelSheet.get_Range("A1").EntireRow.EntireColumn.AutoFit();
-            ExcelManager.ExcelSheet.get_Range("A1").EntireColumn.EntireRow.AutoFit();
+            ExcelSheet.get_Range("A1").EntireRow.EntireColumn.AutoFit();
+            ExcelSheet.get_Range("A1").EntireColumn.EntireRow.AutoFit();
         }
 
         /// <summary>
         /// Last Column index in current sheet
         /// </summary>
         /// <returns></returns>
-        public static int LastColumn()
+        public int LastColumn()
         {
             return ExcelSheet.UsedRange.Columns.Count;
         }
@@ -225,7 +260,7 @@ namespace Merkit.RPA.PA.Framework
         /// Last Row index in current sheet
         /// </summary>
         /// <returns></returns>
-        public static int LastRow()
+        public int LastRow()
         {
             return ExcelSheet.UsedRange.Rows.Count;
         }
@@ -236,7 +271,7 @@ namespace Merkit.RPA.PA.Framework
         /// </summary>
         /// <param name="cell"></param>
         /// <param name="value"></param>
-        public static void SetCellValue(string cell, object value)
+        public void SetCellValue(string cell, object value)
         {
             ExcelSheet.get_Range(cell).Value = value;
             return;
@@ -248,7 +283,7 @@ namespace Merkit.RPA.PA.Framework
         /// <param name="row"></param>
         /// <param name="col"></param>
         /// <returns></returns>
-        public static void SetCellValue(int row, int col, object value)
+        public void SetCellValue(int row, int col, object value)
         {
             ExcelSheet.Cells[row, col].Value = value;
             ExcelSheet.Cells[row, col].NumberFormat = "@";
@@ -261,7 +296,7 @@ namespace Merkit.RPA.PA.Framework
         /// <param name="cellStart"></param>
         /// <param name="cellEnd"></param>
         /// <param name="value"></param>
-        public static void SetRangeValues(string cellStart, string cellEnd, object[] value)
+        public void SetRangeValues(string cellStart, string cellEnd, object[] value)
         {
             ExcelSheet.get_Range(cellStart, cellEnd).Value = value; // mindenhova az első értéket írja
             return;
@@ -272,7 +307,7 @@ namespace Merkit.RPA.PA.Framework
         /// </summary>
         /// <param name="cell"></param>
         /// <returns></returns>
-        public static object ReadCellValue(string cell)
+        public object ReadCellValue(string cell)
         {
             Range rng = ExcelSheet.get_Range(cell);
             return rng.Value;
@@ -293,7 +328,7 @@ namespace Merkit.RPA.PA.Framework
         /// <param name="row"></param>
         /// <param name="col"></param>
         /// <returns></returns>
-        public static string ReadCellValue(int row, int col)
+        public string ReadCellValue(int row, int col)
         {
             string value = ExcelSheet.Cells[row, col].Value?.ToString();
             return value;
@@ -304,9 +339,9 @@ namespace Merkit.RPA.PA.Framework
         /// </summary>
         /// <param name="startCell"></param>
         /// <returns></returns>
-        public static Range GetCellRange(string startCell)
+        public Range GetCellRange(string startCell)
         {
-            Range range = ExcelManager.ExcelSheet.get_Range(startCell);
+            Range range = ExcelSheet.get_Range(startCell);
             return range;
         }
 
@@ -315,18 +350,29 @@ namespace Merkit.RPA.PA.Framework
         /// </summary>
         /// <param name="startCell"></param>
         /// <returns></returns>
-        public static Range ReadEntireRow(string startCell)
+        public Range ReadEntireRow(string startCell)
         {
             Range range = GetCellRange(startCell).EntireRow;
             return range;
         }
 
         /// <summary>
+        /// Read entire row from cell
+        /// </summary>
+        /// <param name="startCell"></param>
+        /// <returns></returns>
+        //public Range ReadEntireSheet(string startCell)
+        //{
+        //    Range range = ExcelSheet.get_Range(0, 0, 1, 1);
+        //    return range;
+        //}
+
+        /// <summary>
         /// Set Cell Color by cell name
         /// </summary>
         /// <param name="cell"></param>
         /// <param name="colorValue"></param>
-        public static void SetCellColor(string cell, Color colorValue)
+        public void SetCellColor(string cell, Color colorValue)
         {
             ExcelSheet.get_Range(cell).Interior.Color = System.Drawing.ColorTranslator.ToOle(colorValue);
             return;
@@ -338,7 +384,7 @@ namespace Merkit.RPA.PA.Framework
         /// </summary>
         /// <param name="cell"></param>
         /// <param name="colorValue"></param>
-        public static void SetCellColor(int row, int col, Color colorValue)
+        public void SetCellColor(int row, int col, Color colorValue)
         {
             ExcelSheet.Cells[row, col].Interior.Color = System.Drawing.ColorTranslator.ToOle(colorValue);
             return;
@@ -350,7 +396,7 @@ namespace Merkit.RPA.PA.Framework
         /// <param name="cellStart"></param>
         /// <param name="cellEnd"></param>
         /// <param name="colorValue"></param>
-        public static void SetRangeColor(string cellStart, string cellEnd, Color colorValue)
+        public void SetRangeColor(string cellStart, string cellEnd, Color colorValue)
         {
             ExcelSheet.get_Range(cellStart, cellEnd).Interior.Color = System.Drawing.ColorTranslator.ToOle(colorValue);
             return;
@@ -360,7 +406,7 @@ namespace Merkit.RPA.PA.Framework
         /// Insert First Column
         /// </summary>
         /// <param name="value"></param>
-        public static void InsertFirstColumn(string value)
+        public void InsertFirstColumn(string value)
         {
             ExcelSheet.Cells[1, 1].EntireColumn.Insert(XlInsertShiftDirection.xlShiftToRight, XlInsertFormatOrigin.xlFormatFromRightOrBelow);
             SetCellValue(1, 1, value);
@@ -373,7 +419,7 @@ namespace Merkit.RPA.PA.Framework
         /// <param name="oSheet"></param>
         /// <param name="onlyHeader"></param>
         /// <returns></returns>
-        public static DataTable WorksheetToDataTable(Excel.Worksheet oSheet, bool onlyHeader = false)
+        public DataTable WorksheetToDataTable(Excel.Worksheet oSheet, bool onlyHeader = false)
         {
             // only headers or all rows
             int totalRows = onlyHeader ? 1 : oSheet.UsedRange.Rows.Count;
@@ -413,7 +459,7 @@ namespace Merkit.RPA.PA.Framework
         /// </summary>
         /// <param name="dt"></param>
         /// <returns></returns>
-        public static Dictionary<string, string> GetExcelColumnNamesByDataTable(System.Data.DataTable dt)
+        public Dictionary<string, string> GetExcelColumnNamesByDataTable(System.Data.DataTable dt)
         {
             Dictionary<string, string> dictExcelColumnNameToExcellCol = new Dictionary<string, string>();
             int colNum=0;
@@ -432,7 +478,7 @@ namespace Merkit.RPA.PA.Framework
         /// </summary>
         /// <param name="columnNumber"></param>
         /// <returns></returns>
-        public static string GetExcelColumnNameByColumnNumber(int columnNumber)
+        public string GetExcelColumnNameByColumnNumber(int columnNumber)
         {
             int dividend = columnNumber;
             string columnName = String.Empty;
@@ -454,7 +500,7 @@ namespace Merkit.RPA.PA.Framework
         /// <param name="currentRow"></param>
         /// <param name="colName"></param>
         /// <returns></returns>
-        public static string GetDataRowValue(DataRow currentRow, string colName)
+        public string GetDataRowValue(DataRow currentRow, string colName)
         {
             string value = "";
             

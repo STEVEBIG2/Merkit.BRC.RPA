@@ -355,23 +355,27 @@ namespace Merkit.BRC.RPA
             return result;
         }
 
+
         /// <summary>
         /// Call InsertExcelSheetProc stored procedure
         /// </summary>
         /// <param name="excelFileId"></param>
-        /// <param name="excelSheetName"></param>
+        /// <param name="excelSheetId"></param>
+        /// <param name="excelRownNum"></param>
+        /// <param name="ugyintezoValue"></param>
+        /// <param name="dr"></param>
         /// <param name="sqlManager"></param>
         /// <param name="tr"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public static int InsertExcelRowProc(int excelFileId, int excelSheetId, int excelRownNum, DataRow dr, MSSQLManager sqlManager, SqlTransaction tr = null)
+        public static int InsertExcelRowProc(int excelFileId, int excelSheetId, int excelRownNum, string ugyintezoValue, DataRow dr, MSSQLManager sqlManager, SqlTransaction tr = null)
         {
             string[] yesValues = { "igen", "yes", "true" };
             int result = -1;
             string colStrValue = "";
             string dropdownValue = "";
             int colIntValue = -1;
-            string ugyintezoValue = ExcelManager.GetDataRowValue(dr, "Ügyintéző").ToLower();
+            //string ugyintezoValue = excelManager.GetDataRowValue(dr, "Ügyintéző").ToLower();
 
             Dictionary<string, object> paramsDict = new Dictionary<string, object>()
             {

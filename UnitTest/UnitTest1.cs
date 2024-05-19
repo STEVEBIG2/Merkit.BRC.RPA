@@ -21,6 +21,7 @@ using System.ComponentModel;
 using UnitTest;
 using System.Data.SqlTypes;
 using Excel = Microsoft.Office.Interop.Excel;
+using System.Security.Cryptography;
 
 namespace UnitTestProject1
 {
@@ -28,10 +29,12 @@ namespace UnitTestProject1
     [TestClass]
     public class UnitTest1
     {
+        public static ExcelManager excelManager = new ExcelManager();
+        public static ExcelManager excelManager2 = new ExcelManager();
         private const string PasswordName = "UiPath: Enter Hungary";
         private const string UserName = "istvan.nagy@merkit.hu";
         private const string Password = "Qw52267660";
-        private const string ExcelFileName = @"c:\Munka\Work\Teszt_adatok.xlsx";
+        private const string ExcelFileName = @"c:\RPA\Munka\Teszt_adatok_hibaval.xlsx";
         // String.Format("Data Source={0};Initial Catalog={1};User Id={2};Password={3};Application Name={4};Connect Timeout={5};Encrypt=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False; MultipleActiveResultSets=True", in_Config.MsSqlHost, in_Config.MsSqlDatabase, userName, password, in_Config.AppCode, 30)
 
         public void InitConfig()
@@ -138,6 +141,39 @@ namespace UnitTestProject1
             Assert.IsTrue(true);
         }
 
+
+        [TestMethod]
+        public void TestCreateExcel()
+        {
+            bool isOk = excelManager.CreateExcel(@"c:\Munka\Test_" + DateTime.Now.ToString("yyyyMMddhhmmss") + ".xlsx", "Ez@neve");
+
+            if(isOk)
+            {
+                excelManager.CloseExcelWithoutSave();
+            }
+
+            Assert.IsTrue(isOk);
+        }
+
+        [TestMethod]
+        public void TestCopySheetToNewExcel()
+        {
+            bool isOk1 = excelManager.OpenExcel(ExcelFileName);
+            bool isOk2 = excelManager2.CreateExcel(@"c:\Munka\Test_" + DateTime.Now.ToString("yyyyMMddhhmmss") + ".xlsx", "Ez@neve");
+
+            if (isOk1 && isOk2)
+            {
+                // excelManager.ExcelSheet
+                excelManager.ReadEntireRow("A1");
+                excelManager2.SetRangeValues("A1", )
+
+                excelManager.SaveAndCloseExcel();
+                excelManager2.CloseExcelWithoutSave();
+            }
+
+            Assert.IsTrue(isOk1 && isOk2);
+        }
+
         [TestMethod]
         public void TestCopyExcelRows()
         {
@@ -146,35 +182,35 @@ namespace UnitTestProject1
             Range dest;
 
             string excelFileName = @"C:\Munka\Teszt_adatok.xlsx";
-            bool isOk = ExcelManager.OpenExcel(excelFileName);
+            bool isOk = excelManager.OpenExcel(excelFileName);
 
             if(isOk)
             {
-                ExcelManager.SelectWorksheetByName("Munka1");
-                Range headerRange = ExcelManager.ReadEntireRow("A1");
-                lastRowMunka = ExcelManager.LastRow();
+                excelManager.SelectWorksheetByName("Munka1");
+                Range headerRange = excelManager.ReadEntireRow("A1");
+                lastRowMunka = excelManager.LastRow();
 
                 for(int i = 2;  i<= lastRowMunka; i++)
                 {
-                    ExcelManager.SelectWorksheetByName("Munka1");
-                    Range copyRange = ExcelManager.ReadEntireRow("A"+ i.ToString());
+                    excelManager.SelectWorksheetByName("Munka1");
+                    Range copyRange = excelManager.ReadEntireRow("A"+ i.ToString());
                     
                     // létezik a munkalap?
-                    if(ExcelManager.AddNewSheetIfNotExist("Új"))
+                    if(excelManager.AddNewSheetIfNotExist("Új"))
                     {
-                        dest = ExcelManager.GetCellRange("A1");
+                        dest = excelManager.GetCellRange("A1");
                         headerRange.Copy(dest);
                     }
 
-                    lastRowUj = ExcelManager.LastRow()+1;
-                    dest = ExcelManager.GetCellRange("A" + lastRowUj.ToString());
+                    lastRowUj = excelManager.LastRow()+1;
+                    dest = excelManager.GetCellRange("A" + lastRowUj.ToString());
                     copyRange.Copy(dest);
                 }
 
-                ExcelManager.SelectWorksheetByName("Új");
-                ExcelManager.AutoFit();
+                excelManager.SelectWorksheetByName("Új");
+                excelManager.AutoFit();
 
-                ExcelManager.SaveAndCloseExcel();
+                excelManager.SaveAndCloseExcel();
             }
             
             Assert.IsTrue(isOk);
@@ -325,14 +361,14 @@ namespace UnitTestProject1
             }
 
             // ** aktuális munkalap ellenőrzése
-            bool isOk = ExcelManager.OpenExcel(ExcelFileName);
+            bool isOk = excelManager.OpenExcel(ExcelFileName);
 
-            System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
+            System.Data.DataTable dt = excelManager.WorksheetToDataTable(excelManager.ExcelSheet);
 
             Dispatcher.LoadDropdownValuesFromSQL(sqlManager, dt);
 
             sqlManager.Disconnect();
-            ExcelManager.CloseExcelWithoutSave();
+            excelManager.CloseExcelWithoutSave();
 
             // Write value to Json file
             string path = @"C:\Munka\Log_UnitTest_{0}.txt";
@@ -436,28 +472,28 @@ namespace UnitTestProject1
                 "Fájl Feltöltés Státusz" };
 
             //ExcelManager excelManager = new ExcelManager();
-            bool isOk = ExcelManager.OpenExcel(@"c:\Munka\x.xlsx");
-            isOk = ExcelManager.SelectWorksheetByName("Munka1");
+            bool isOk = excelManager.OpenExcel(@"c:\Munka\x.xlsx");
+            isOk = excelManager.SelectWorksheetByName("Munka1");
 
 
-            //ExcelManager.SetRangeValues("C5", "C10", new object[] { 1, 2, 3, 4, 5, 6 });
-            //var x = ExcelManager.ReadCellValue("C5");
-            //ExcelManager.SetRangeColor("C5", "C10", Color.Red);
-            //ExcelManager.InsertFirstColumn("Kukukcs");
-            DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet, true);
+            //excelManager.SetRangeValues("C5", "C10", new object[] { 1, 2, 3, 4, 5, 6 });
+            //var x = excelManager.ReadCellValue("C5");
+            //excelManager.SetRangeColor("C5", "C10", Color.Red);
+            //excelManager.InsertFirstColumn("Kukukcs");
+            DataTable dt = excelManager.WorksheetToDataTable(excelManager.ExcelSheet, true);
 
             foreach (string fejlec in fejlecek)
             {
                 if(! dt.Columns.Contains(fejlec))
                 {
-                    ExcelManager.InsertFirstColumn(fejlec);
-                    ExcelManager.SetCellColor(1,1, System.Drawing.Color.Green); // LightCoral
+                    excelManager.InsertFirstColumn(fejlec);
+                    excelManager.SetCellColor(1,1, System.Drawing.Color.Green); // LightCoral
                 }
             }
 
             if (isOk)
             {
-                ExcelManager.SaveAndCloseExcel();
+                excelManager.SaveAndCloseExcel();
             }
 
             Assert.IsTrue(isOk);

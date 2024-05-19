@@ -74,6 +74,7 @@ namespace Merkit.BRC.RPA
         public static Dictionary<string, List<string>> dropDownValuesbyType = new Dictionary<string, List<string>>();
         public static Dictionary<string, Dictionary<string, int>> dropDownIDsbyType = new Dictionary<string, Dictionary<string, int>>();
 
+        public static ExcelManager excelManager = new ExcelManager();
         public static int excelColNum = 0;
 
         public static List<ExcelCol> excelHeaders = new List<ExcelCol>() {
@@ -201,7 +202,7 @@ namespace Merkit.BRC.RPA
             bool headerOk = false;
             object retValue = 0;
             int excelSheetId = 0;
-            bool isOk = ExcelManager.OpenExcel(excelFileName);
+            bool isOk = excelManager.OpenExcel(excelFileName);
 
             // Excel megnyitása sikeres?
             if (isOk)
@@ -209,7 +210,7 @@ namespace Merkit.BRC.RPA
                 sqlString = String.Format(String.Format("UPDATE ExcelFiles SET QStatusId={0}, QStatusTime=getdate() WHERE ExcelFileId={1}", (int)QStatusNum.CheckingInProgress, excelFileId));
                 sqlManager.ExecuteNonQuery(sqlString);
 
-                List<string> sheetNames = ExcelManager.WorksheetNames();
+                List<string> sheetNames = excelManager.WorksheetNames();
 
                 // munkalapok fejléceinek ellenőrzése
                 foreach (string sheetName in sheetNames.Where(x => !x.Contains("Referen") && !x.Contains("Error")))
@@ -230,7 +231,7 @@ namespace Merkit.BRC.RPA
                 isOk = ExcelAllSheetRowsValidator(excelFileId, sqlManager); 
                 sqlString = String.Format("UPDATE ExcelFiles SET QStatusId={0}, QStatusTime=getdate() WHERE ExcelFileId={1}", (int)QStatusNum.CheckedOk, excelFileId);
                 sqlManager.ExecuteNonQuery(sqlString);
-                ExcelManager.CloseExcelWithoutSave();
+                excelManager.CloseExcelWithoutSave();
                 Framework.Logger(0, "ExcelHeaderValidator", "Info", "", "-", String.Format("{0} file ellenőrzése sikeresen befejeződött.", excelFileName));
             }
             else
@@ -252,9 +253,9 @@ namespace Merkit.BRC.RPA
         {
             Framework.Logger(0, "ExcelSheetHeaderValidator", "Info", "", "-", String.Format("A(z) {0} munkalap fejléc ellenőrzése elkezdődött.", sheetName));
             // megadott munkalap beolvasása
-            ExcelManager.SelectWorksheetByName(sheetName);
+            excelManager.SelectWorksheetByName(sheetName);
             bool isHeaderOk = true;
-            System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet, true);
+            System.Data.DataTable dt = excelManager.WorksheetToDataTable(excelManager.ExcelSheet, true);
 
             // oszlopok meglétének ellenőrzése
             foreach (ExcelCol fejlec in excelHeaders.OrderByDescending(x => x.ExcelColNum))
@@ -265,18 +266,18 @@ namespace Merkit.BRC.RPA
 
                     if (!fejlec.ExcelColRole.Equals(ExcelColRoleNum.CreateIfNoExists))
                     {
-                        ExcelManager.InsertFirstColumn(fejlec.ExcelColName);
+                        excelManager.InsertFirstColumn(fejlec.ExcelColName);
                         Framework.Logger(0, "ExcelSheetHeaderValidator", "Err", "", "-", String.Format("Hiányzó oszlop a(z) {0} munkalapon : {1}", sheetName, fejlec.ExcelColName));
-                        ExcelManager.SetCellColor("A1", System.Drawing.Color.LightCoral);
+                        excelManager.SetCellColor("A1", System.Drawing.Color.LightCoral);
                         isHeaderOk = false;
                     }
                     else
                     {
                         if(isHeaderOk)
                         {
-                            ExcelManager.InsertFirstColumn(fejlec.ExcelColName);
-                            ExcelManager.SetCellColor("A1", System.Drawing.Color.Khaki);
-                            ExcelManager.AutoFit();
+                            excelManager.InsertFirstColumn(fejlec.ExcelColName);
+                            excelManager.SetCellColor("A1", System.Drawing.Color.Khaki);
+                            excelManager.AutoFit();
                         }
                     }
                 }
@@ -284,10 +285,10 @@ namespace Merkit.BRC.RPA
 
             if (!isHeaderOk)
             {
-                ExcelManager.ExcelSheet.Rows[1].Insert();
-                ExcelManager.SetCellValue("A1", "Hibás excel: hiányzó oszlopok. A hiányzó oszlopok világos korall színű fejléccel be lettek szúrva.");
-                ExcelManager.SetRangeColor("A1", "E1", System.Drawing.Color.Red);
-                ExcelManager.SaveExcel();
+                excelManager.ExcelSheet.Rows[1].Insert();
+                excelManager.SetCellValue("A1", "Hibás excel: hiányzó oszlopok. A hiányzó oszlopok világos korall színű fejléccel be lettek szúrva.");
+                excelManager.SetRangeColor("A1", "E1", System.Drawing.Color.Red);
+                excelManager.SaveExcel();
             }
 
             Framework.Logger(0, "A(z) ExcelSheetHeaderValidator", "Info", "", "-", String.Format("{0} munkalap fejléc ellenőrzése befejeződött.", sheetName));
@@ -339,11 +340,11 @@ namespace Merkit.BRC.RPA
             Framework.Logger(0, "ExcelSheetRowsValidator", "Info", "", "-", String.Format("A(z) {0} munkalap sorainak ellenőrzése elkezdődött.", sheetName));
 
             // megadott munkalap beolvasása
-            ExcelManager.SelectWorksheetByName(sheetName);
-            Range headerRange = ExcelManager.ReadEntireRow("A1");
+            excelManager.SelectWorksheetByName(sheetName);
+            Range headerRange = excelManager.ReadEntireRow("A1");
 
-            System.Data.DataTable dt = ExcelManager.WorksheetToDataTable(ExcelManager.ExcelSheet);
-            Dictionary<string, string> dictExcelColumnNameToExcellCol = ExcelManager.GetExcelColumnNamesByDataTable(dt);
+            System.Data.DataTable dt = excelManager.WorksheetToDataTable(excelManager.ExcelSheet);
+            Dictionary<string, string> dictExcelColumnNameToExcellCol = excelManager.GetExcelColumnNamesByDataTable(dt);
             string checkStatuscellName = dictExcelColumnNameToExcellCol["Ellenőrzés Státusz"];
             Dispatcher.LoadDropdownValuesFromSQL(sqlManager, dt);
             Dispatcher.LoadZipCodeValuesFromSQL(sqlManager, dt);
@@ -357,7 +358,7 @@ namespace Merkit.BRC.RPA
                 {
                     isRowOk = true;
                     rowNum++;
-                    checkStatus = ExcelManager.GetDataRowValue(currentRow, "Ellenőrzés Státusz");
+                    checkStatus = excelManager.GetDataRowValue(currentRow, "Ellenőrzés Státusz");
 
                     // nem ellenőrzött sor?
                     if (String.IsNullOrEmpty(checkStatus))
@@ -365,11 +366,12 @@ namespace Merkit.BRC.RPA
                         isRowOk = ExcelSheetCurrentRowValidator(currentRow, sheetName, headerRange, rowNum, ref dictExcelColumnNameToExcellCol);
                         // Ellenőrzés státusz állítása
                         checkStatus = isRowOk ? "OK" : "Hibás";
-                        ExcelManager.SetCellValue(checkStatuscellName + rowNum.ToString(), checkStatus);
+                        excelManager.SetCellValue(checkStatuscellName + rowNum.ToString(), checkStatus);
                         
                         if (isRowOk) // SQL-be írás kell?
                         {
-                            int excelRowId = Dispatcher.InsertExcelRowProc(excelFileId, excelSheetId, rowNum, currentRow, sqlManager, tr);
+                            string ugyintezoValue = excelManager.GetDataRowValue(currentRow, "Ügyintéző").ToLower();
+                            int excelRowId = Dispatcher.InsertExcelRowProc(excelFileId, excelSheetId, rowNum, ugyintezoValue, currentRow, sqlManager, tr);
                         }
                     }
                     else
@@ -382,7 +384,7 @@ namespace Merkit.BRC.RPA
 
                 Framework.Logger(0, "ExcelSheetRowsValidator", "Info", "", "-", String.Format("A(z) {0} munkalap sorainak ellenőrzése befejeződött.", sheetName));
                 tr.Commit();
-                ExcelManager.SaveExcel();
+                excelManager.SaveExcel();
             }
             catch (Exception ex )
             {
@@ -441,21 +443,21 @@ namespace Merkit.BRC.RPA
             // hibás sor?
             if (!isRowOk)
             {
-                errorSheet = String.Format("Error - {0}", !isAdminOk ? Config.NotifyEmail.ToLower() : ExcelManager.GetDataRowValue(currentRow, "Ügyintéző").ToLower());
-                Range copyRange = ExcelManager.ReadEntireRow("A" + rowNum.ToString());
+                errorSheet = String.Format("Error - {0}", !isAdminOk ? Config.NotifyEmail.ToLower() : excelManager.GetDataRowValue(currentRow, "Ügyintéző").ToLower());
+                Range copyRange = excelManager.ReadEntireRow("A" + rowNum.ToString());
 
                 // létezik a munkalap?
-                if (ExcelManager.AddNewSheetIfNotExist(errorSheet))
+                if (excelManager.AddNewSheetIfNotExist(errorSheet))
                 {
-                    dest = ExcelManager.GetCellRange("A1");
+                    dest = excelManager.GetCellRange("A1");
                     headerRange.Copy(dest);
                 }
 
-                int lastRow = ExcelManager.LastRow() + 1;
-                dest = ExcelManager.GetCellRange("A" + lastRow.ToString());
+                int lastRow = excelManager.LastRow() + 1;
+                dest = excelManager.GetCellRange("A" + lastRow.ToString());
                 copyRange.Copy(dest);
-                ExcelManager.AutoFit();
-                ExcelManager.SelectWorksheetByName(sheetName);
+                excelManager.AutoFit();
+                excelManager.SelectWorksheetByName(sheetName);
             }
 
             return isRowOk;
@@ -503,17 +505,17 @@ namespace Merkit.BRC.RPA
             bool isRowOk = true;
 
             // ** címek összefüggései (A "Munkavállaló: Házszám" és "Munkavállaló: HRSZ" közül az egyik kötelező adat, és mindkettő egyszerre nem lehet kitöltve)
-            cellValue = ExcelManager.GetDataRowValue(currentRow, "Munkavállaló: Házszám").ToLower();
-            string cellValue2 = ExcelManager.GetDataRowValue(currentRow, "Munkavállaló: HRSZ").ToLower();
+            cellValue = excelManager.GetDataRowValue(currentRow, "Munkavállaló: Házszám").ToLower();
+            string cellValue2 = excelManager.GetDataRowValue(currentRow, "Munkavállaló: HRSZ").ToLower();
             isCellaValueOk = String.IsNullOrEmpty(cellValue) != String.IsNullOrEmpty(cellValue2); 
 
             if (!isCellaValueOk)
             {
                 isRowOk = false;
                 cellName = fieldList["Munkavállaló: Házszám"] + rowNum.ToString();
-                ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                excelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                 cellName = fieldList["Munkavállaló: HRSZ"] + rowNum.ToString();
-                ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                excelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
             }
 
             return isRowOk;
@@ -529,12 +531,12 @@ namespace Merkit.BRC.RPA
         {
             // *** "Nőtlen/hajadon"
             string colName = "Személy: Családi állapot";
-            string cellValue = ExcelManager.GetDataRowValue(currentRow, colName).ToLower();
+            string cellValue = excelManager.GetDataRowValue(currentRow, colName).ToLower();
             string cellName = fieldList[colName] + rowNum.ToString();
 
             if (cellValue.Equals("nőtlen") || cellValue.Equals("hajadon"))
             {
-                ExcelManager.SetCellValue(cellName, "Nőtlen/hajadon");
+                excelManager.SetCellValue(cellName, "Nőtlen/hajadon");
             }
 
             return true;
@@ -550,14 +552,14 @@ namespace Merkit.BRC.RPA
         private static bool AdministratorChecker(DataRow currentRow, int rowNum, ref Dictionary<string, string> fieldList)
         {
             string colName = "Ügyintéző";
-            string cellValue = ExcelManager.GetDataRowValue(currentRow, colName).ToLower();
+            string cellValue = excelManager.GetDataRowValue(currentRow, colName).ToLower();
             string cellName = fieldList[colName] + rowNum.ToString();
             bool isCellValueOk = cellValue.Length>0 && Dispatcher.enterHungaryLogins.ContainsKey(cellValue);
             
             // ügyintéző létezik?
             if (!isCellValueOk)
             {
-                ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                excelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
             }
 
             return isCellValueOk;
@@ -577,13 +579,13 @@ namespace Merkit.BRC.RPA
             // dátum oszlopokon végigmenni
             foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRequired == ExcelColRequiredNum.Yes && x.ExcelColRole != ExcelColRoleNum.Regex && x.ExcelColType != ExcelColTypeNum.YesNo))
             {
-                string cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
+                string cellValue = excelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
                 string cellName = fieldList[col.ExcelColName] + rowNum.ToString();
 
                 if (cellValue.Length == 0)
                 {
                     isRowValueOk = false;
-                    ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                    excelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                 }
 
             }
@@ -606,13 +608,13 @@ namespace Merkit.BRC.RPA
             // dátum oszlopokon végigmenni
             foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRequired == ExcelColRequiredNum.Yes && x.ExcelColType == ExcelColTypeNum.YesNo))
             {
-                string cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
+                string cellValue = excelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
                 string cellName = fieldList[col.ExcelColName] + rowNum.ToString();
 
                 if (cellValue.Length == 0 || ! yesNoValues.Contains(cellValue))
                 {
                     isRowValueOk = false;
-                    ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                    excelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                 }
 
             }
@@ -635,7 +637,7 @@ namespace Merkit.BRC.RPA
             // regex oszlopokon végigmenni
             foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRole == ExcelColRoleNum.Regex))
             {
-                string cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
+                string cellValue = excelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
                 string cellName = fieldList[col.ExcelColName] + rowNum.ToString();
 
                 if (cellValue.Length > 0 || col.ExcelColRequired == ExcelColRequiredNum.Yes)
@@ -645,7 +647,7 @@ namespace Merkit.BRC.RPA
                     if (!isCellValueOk)
                     {
                         isRowValueOk = false;
-                        ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                        excelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                     }
                 }
 
@@ -672,7 +674,7 @@ namespace Merkit.BRC.RPA
             foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Date))
             {
                 dateTime = DateTime.MinValue;
-                cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
+                cellValue = excelManager.GetDataRowValue(currentRow, col.ExcelColName).ToLower();
                 cellValue = cellValue.Length > 10 ? cellValue.Replace(" ", "").Substring(0, 10) : cellValue;
                 cellName = fieldList[col.ExcelColName] + rowNum.ToString();
 
@@ -706,7 +708,7 @@ namespace Merkit.BRC.RPA
                 // hibás dátum?
                 if (! isCellValueOk)
                 {
-                    ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                    excelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                 }
             }
 
@@ -729,7 +731,7 @@ namespace Merkit.BRC.RPA
             // dropdown oszlopokon végigmenni
             foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Dropdown))
             {
-                cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).Trim().ToLower();
+                cellValue = excelManager.GetDataRowValue(currentRow, col.ExcelColName).Trim().ToLower();
 
                 // nem lehet üres vagy van érték?
                 if (! String.IsNullOrEmpty(cellValue) || col.ExcelColRequired.Equals(ExcelColRequiredNum.Yes))
@@ -740,7 +742,7 @@ namespace Merkit.BRC.RPA
                     // létező érték?
                     if (! dropDownIDsbyType[col.ExcelColName].ContainsKey(cellValue))
                     {
-                        ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                        excelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                         isCellValuesOk = false;
                     }
                 }
@@ -767,7 +769,7 @@ namespace Merkit.BRC.RPA
             // irányítószám oszlopokon végigmenni
             foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColRole == ExcelColRoleNum.ZipCode))
             {
-                cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).Trim().ToLower();
+                cellValue = excelManager.GetDataRowValue(currentRow, col.ExcelColName).Trim().ToLower();
 
                 // nem lehet üres vagy van érték?
                 if (!String.IsNullOrEmpty(cellValue) || col.ExcelColRequired.Equals(ExcelColRequiredNum.Yes))
@@ -778,7 +780,7 @@ namespace Merkit.BRC.RPA
                     // nem létező érték?
                     if (!Dispatcher.zipCodes.Contains(cellValue))
                     {
-                        ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                        excelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                         isCellValuesOk = false;
                     }
                 }
@@ -805,7 +807,7 @@ namespace Merkit.BRC.RPA
             // dátum oszlopokon végigmenni
             foreach (ExcelCol col in excelHeaders.Where(x => x.ExcelColType == ExcelColTypeNum.Link))
             {
-                cellValue = ExcelManager.GetDataRowValue(currentRow, col.ExcelColName).Trim().ToLower();
+                cellValue = excelManager.GetDataRowValue(currentRow, col.ExcelColName).Trim().ToLower();
 
                 // üres érték?
                 if (String.IsNullOrEmpty(cellValue))
@@ -818,7 +820,7 @@ namespace Merkit.BRC.RPA
                     if (Framework.IsValidURL(cellValue))
                     {
                         cellName = fieldList[col.ExcelColName] + rowNum.ToString();
-                        ExcelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
+                        excelManager.SetCellColor(cellName, System.Drawing.Color.LightCoral);
                         isCellValuesOk = false;
                     }
                 }
