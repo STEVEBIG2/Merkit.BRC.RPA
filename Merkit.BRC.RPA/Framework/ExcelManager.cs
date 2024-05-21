@@ -8,6 +8,7 @@ using DataTable = System.Data.DataTable;
 using Excel = Microsoft.Office.Interop.Excel;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Merkit.RPA.PA.Framework
 {
@@ -175,6 +176,39 @@ namespace Merkit.RPA.PA.Framework
 
             return retValue;
 
+        }
+
+        /// <summary>
+        /// Select Worksheet By Index
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public bool SelectWorksheetByIndex(int index)
+        {
+            bool retValue = true;
+
+            try
+            {
+                ExcelSheet = ExcelWorkbook.Sheets[index];
+                ExcelSheet.Activate();
+            }
+            catch
+            {
+                retValue = false;
+            }
+
+            return retValue;
+
+        }
+
+        /// <summary>
+        /// Select First Worksheet
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public bool SelectFirstWorksheetByIndex()
+        {
+            return SelectWorksheetByIndex(1);
         }
 
         /// <summary>

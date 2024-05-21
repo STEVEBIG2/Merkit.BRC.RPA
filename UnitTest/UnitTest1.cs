@@ -170,22 +170,17 @@ namespace UnitTestProject1
         }
 
         [TestMethod]
-        public void TestCopySheetToNewExcel()
+        public void TestCopySheetsToNewExcel()
         {
-            bool isOk1 = excelManager.OpenExcel(ExcelFileName);
-            bool isOk2 = excelManager2.CreateExcel(@"c:\Munka\Test_" + DateTime.Now.ToString("yyyyMMddhhmmss") + ".xlsx", "Ez@neve");
+            // params
+            int excelFileId = 1;
+            string adminName = "Admin"; // Error - rendszergazda@merkit.hu, Reference
+            string excelSourceFileName = @"c:\RPA\Munka\Teszt_adatok_hibaval.xlsx";
+            string destRootFolder = @"c:\RPA\EmailAttachments";
+            List<string> fixSheets = new List<string>() { "Error - rendszergazda@merkit.hu" };
 
-            if (isOk1 && isOk2)
-            {
-                // excelManager.ExcelSheet
-                excelManager.ReadEntireRow("A1");
-                //excelManager2.SetRangeValues("A1", )
-
-                excelManager.SaveAndCloseExcel();
-                excelManager2.CloseExcelWithoutSave();
-            }
-
-            Assert.IsTrue(isOk1 && isOk2);
+            bool isOk = Dispatcher.CopySheetToNewExcel(excelManager, excelFileId, adminName, excelSourceFileName, destRootFolder, fixSheets);
+            Assert.IsTrue(isOk);
         }
 
         [TestMethod]

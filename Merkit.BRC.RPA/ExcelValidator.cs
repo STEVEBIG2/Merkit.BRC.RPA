@@ -384,6 +384,7 @@ namespace Merkit.BRC.RPA
 
                 Framework.Logger(0, "ExcelSheetRowsValidator", "Info", "", "-", String.Format("A(z) {0} munkalap sorainak ellenőrzése befejeződött.", sheetName));
                 tr.Commit();
+                excelManager.SelectFirstWorksheetByIndex();
                 excelManager.SaveExcel();
             }
             catch (Exception ex )

@@ -44,6 +44,40 @@ namespace Merkit.BRC.RPA
         public static Dictionary<string, EnterHungaryLogin> enterHungaryLogins = new Dictionary<string, EnterHungaryLogin>(); // ügyintézők
         public static List<string> zipCodes = new List<string>();
 
+        /// <summary>
+        /// Copy Sheet To New Excel
+        /// </summary>
+        /// <param name="excelManager"></param>
+        /// <param name="excelFileId"></param>
+        /// <param name="adminName"></param>
+        /// <param name="excelSourceFileName"></param>
+        /// <param name="destRootFolder"></param>
+        /// <param name="fixSheets"></param>
+        /// <returns></returns>
+        public static bool CopySheetToNewExcel(ExcelManager excelManager,int excelFileId, string adminName, string excelSourceFileName, string destRootFolder, List<string> fixSheets)
+        {
+            // path and file names
+            string excelFileNameWithoutExtension = Path.GetFileNameWithoutExtension(excelSourceFileName);
+            string destFolder = String.Format(@"{0}\{1}", destRootFolder, excelFileId);
+            string excelDestFileName = Path.Combine(destFolder, String.Format("{0}_{1}.xlsx", excelFileNameWithoutExtension, adminName));
+
+            // clone old excel file
+            Directory.CreateDirectory(destFolder);
+            File.Copy(excelSourceFileName, excelDestFileName, true);
+
+            // delete all sheet, where no need in new excel
+            bool isOk = excelManager.OpenExcel(excelDestFileName);
+
+            if (isOk)
+            {
+                List<string> list = excelManager.WorksheetNames().Where(x => !x.Contains("Referen") && !fixSheets.Contains(x)).ToList();
+                list.ForEach(x => excelManager.DeleteSheetIfExist(x));
+                excelManager.SelectFirstWorksheetByIndex();
+                excelManager.SaveAndCloseExcel();
+            }
+
+            return isOk;
+        }
 
         private static System.Data.DataTable GetNextExcelFile(MSSQLManager sqlManager, string inputDir, string workDir)
         {
@@ -318,7 +352,6 @@ namespace Merkit.BRC.RPA
             return result;
         }
 
-
         /// <summary>
         /// Call InsertExcelSheetProc stored procedure
         /// </summary>
@@ -354,7 +387,6 @@ namespace Merkit.BRC.RPA
 
             return result;
         }
-
 
         /// <summary>
         /// Call InsertExcelSheetProc stored procedure
