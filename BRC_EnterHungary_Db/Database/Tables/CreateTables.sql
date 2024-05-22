@@ -1,4 +1,4 @@
-﻿-- Use BRC_Hungary_Test 
+﻿-- Use BRC_Hungary_Test
 -- GO
 
 -- DROP TABLE ExcelRows
@@ -813,4 +813,30 @@ CREATE VIEW View_ExcelRows AS
    r.Vizumfelv_ny_link,
    r.Kolcs_szerz_link
    From ExcelRows r
+GO
+
+-- 
+
+CREATE TABLE EmailQueue (
+    EmailQueueId int IDENTITY(1,1) NOT NULL,
+	ExcelFileId int NULL,
+	EmailTo varchar(250) NOT NULL,
+	EmailCC varchar(250) NULL,
+	EmailBCC varchar(250) NULL,
+	EmailSubject varchar(250) NOT NULL,
+	EmailBody varchar(max) NOT NULL,
+	Attachments varchar(250) NULL,
+    RobotName varchar(50) NULL,
+	CreateTime datetime NOT NULL,
+	SentTime datetime NULL,
+ CONSTRAINT PK_EmailQueue PRIMARY KEY NONCLUSTERED 
+(
+	EmailQueueId ASC
+))
+GO
+
+CREATE INDEX IX1_EmailQueue_ExcelFileId On EmailQueue(ExcelFileId)
+GO
+
+ALTER TABLE EmailQueue  WITH CHECK ADD  CONSTRAINT FK_EmailQueue_ExcelFileId FOREIGN KEY(ExcelFileId) REFERENCES ExcelFiles (ExcelFileId)
 GO

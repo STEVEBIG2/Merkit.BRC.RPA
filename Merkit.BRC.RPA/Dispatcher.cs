@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlTypes;
 using System.Runtime.Remoting.Messaging;
+using System.Net.Mail;
 
 namespace Merkit.BRC.RPA
 {
@@ -53,10 +54,11 @@ namespace Merkit.BRC.RPA
         /// </summary>
         /// <param name="excelFileId"></param>
         /// <returns></returns>
-        public static bool CreateErrorExcels(MSSQLManager sqlManager, int excelFileId, string excelSourceFileName, string destRootFolder,string sysAdminName)
+        public static bool CreateErrorExcels(MSSQLManager sqlManager, int excelFileId, string excelSourceFileName, string destRootFolder, string sysAdminName)
         {
             ExcelManager excelManager = new ExcelManager();
             List<string> fixSheets = new List<string>();
+            string attachments = "";
             bool isOk = excelManager.OpenExcel(excelSourceFileName);
 
             // Excel megnyitása sikeres?
@@ -71,6 +73,9 @@ namespace Merkit.BRC.RPA
                 // ha Admin hiba Excel ok, ügyintézői hiba excelek készítése
                 if (isOk)
                 {
+                    attachments = Path.Combine(destRootFolder, String.Format("{0}_{1}.xlsx", excelSourceFileName, sysAdminName));
+                    InsertEmailQueue(excelFileId, sysAdminName, "Robot futtatás - excel adat hibák", "Hibák mellékelve", attachments, sqlManager);
+                    
                     string adminName = "";
 
                     foreach (string errorSheetName in errorSheetNames.Where(x => !x.Contains(sysAdminName)).ToList())
@@ -80,7 +85,12 @@ namespace Merkit.BRC.RPA
                         adminName = errorSheetName.Replace("Error - ", "");
                         isOk = CopySheetToNewExcel(excelManager, excelFileId, adminName, excelSourceFileName, destRootFolder, fixSheets);
 
-                        if (!isOk)
+                        if (isOk)
+                        {
+                            attachments = Path.Combine(destRootFolder, String.Format("{0}_{1}.xlsx", excelSourceFileName, sysAdminName));
+                            InsertEmailQueue(excelFileId, adminName, "Robot futtatás - excel adat hibák", "Hibák mellékelve", attachments, sqlManager);
+                        }
+                        else
                         {
                             break;
                         }
@@ -176,6 +186,91 @@ namespace Merkit.BRC.RPA
             }
 
             return isOk;
+        }
+
+        /// <summary>
+        /// Call InsertEmailQueue stored procedure
+        /// </summary>
+        /// <param name="excelFileId"></param>
+        /// <param name="emailTo"></param>
+        /// <param name="emailCC"></param>
+        /// <param name="emailBCC"></param>
+        /// <param name="emailSubject"></param>
+        /// <param name="emailBody"></param>
+        /// <param name="attachments"></param>
+        /// <param name="sqlManager"></param>
+        /// <param name="tr"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static int InsertEmailQueue(int excelFileId, string emailTo, string emailCC, string emailBCC, string emailSubject, string emailBody, string attachments, MSSQLManager sqlManager, SqlTransaction tr = null)
+        {
+            int result = -1;
+
+            try
+            {
+                result = sqlManager.ExecuteProcWithReturnValue(
+                    "InsertEmailQueue",
+                    new Dictionary<string, object>() {
+                        { "@ExcelFileId", excelFileId },
+                        { "@EmailTo", emailTo },
+                        { "@EmailCC", emailCC },
+                        { "@EmailBCC", emailBCC },
+                        { "@EmailSubject", emailSubject },
+                        { "@EmailBody", emailBody },
+                        { "@Attachments", attachments },
+                        { "@RobotName", Environment.UserName }
+                    },
+                    tr);
+
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("SqlException: " + ex.Message);
+            }
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Call InsertEmailQueue stored procedure (no cc, bcc)
+        /// </summary>
+        /// <param name="excelFileId"></param>
+        /// <param name="emailTo"></param>
+        /// <param name="emailSubject"></param>
+        /// <param name="emailBody"></param>
+        /// <param name="attachments"></param>
+        /// <param name="sqlManager"></param>
+        /// <param name="tr"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static int InsertEmailQueue(int excelFileId, string emailTo,string emailSubject, string emailBody, string attachments, MSSQLManager sqlManager, SqlTransaction tr = null)
+        {
+            int result = -1;
+
+            try
+            {
+                result = sqlManager.ExecuteProcWithReturnValue(
+                    "InsertEmailQueue",
+                    new Dictionary<string, object>() {
+                        { "@ExcelFileId", excelFileId },
+                        { "@EmailTo", emailTo },
+                        { "@EmailCC", null },
+                        { "@EmailBCC", null },
+                        { "@EmailSubject", emailSubject },
+                        { "@EmailBody", emailBody },
+                        { "@Attachments", attachments },
+                        { "@RobotName", Environment.UserName }
+                    },
+                    tr);
+
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("SqlException: " + ex.Message);
+            }
+
+            return result;
         }
 
         #endregion
