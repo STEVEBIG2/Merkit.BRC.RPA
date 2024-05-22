@@ -184,6 +184,24 @@ namespace UnitTestProject1
         }
 
         [TestMethod]
+        public void TestCreateErrorExcels()
+        {
+            int excelFileId = 22;
+            string excelSourceFileName = @"c:\RPA\Munka\Teszt_adatok_hibaval.xlsx";
+            string destRootFolder = @"c:\RPA\EmailAttachments";
+            string sysAdminName = "rendszergazda@merkit.hu";
+
+            InitConfig();
+            MSSQLManager sqlManager = new MSSQLManager();
+            sqlManager.ConnectByConfig();
+
+            bool isOk = Dispatcher.CreateErrorExcels(sqlManager,excelFileId, excelSourceFileName, destRootFolder, sysAdminName);
+
+            sqlManager.Disconnect();
+            Assert.IsTrue(isOk);
+        }
+
+        [TestMethod]
         public void TestCopyExcelRows()
         {
             int lastRowMunka = 0;

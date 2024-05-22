@@ -8,6 +8,8 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data.SqlTypes;
+using System.Runtime.Remoting.Messaging;
 
 namespace Merkit.BRC.RPA
 {
@@ -44,6 +46,103 @@ namespace Merkit.BRC.RPA
         public static Dictionary<string, EnterHungaryLogin> enterHungaryLogins = new Dictionary<string, EnterHungaryLogin>(); // ügyintézők
         public static List<string> zipCodes = new List<string>();
 
+        #region Dispatcher - CreateErrorExcels
+
+        /// <summary>
+        /// Create Error Excels
+        /// </summary>
+        /// <param name="excelFileId"></param>
+        /// <returns></returns>
+        public static bool CreateErrorExcels(MSSQLManager sqlManager, int excelFileId, string excelSourceFileName, string destRootFolder,string sysAdminName)
+        {
+            ExcelManager excelManager = new ExcelManager();
+            List<string> fixSheets = new List<string>();
+            bool isOk = excelManager.OpenExcel(excelSourceFileName);
+
+            // Excel megnyitása sikeres?
+            if (isOk)
+            {
+                List<string> errorSheetNames = excelManager.WorksheetNames().Where(x => x.StartsWith("Error - ")).ToList();
+                excelManager.CloseExcelWithoutSave();
+                
+                // Admin hiba Excel
+                isOk = CreateAdminErrorExcel(sqlManager, excelFileId, excelManager, errorSheetNames, excelSourceFileName, destRootFolder, sysAdminName);
+
+                // ha Admin hiba Excel ok, ügyintézői hiba excelek készítése
+                if (isOk)
+                {
+                    string adminName = "";
+
+                    foreach (string errorSheetName in errorSheetNames.Where(x => !x.Contains(sysAdminName)).ToList())
+                    {
+                        fixSheets.Clear();
+                        fixSheets.Add(errorSheetName);
+                        adminName = errorSheetName.Replace("Error - ", "");
+                        isOk = CopySheetToNewExcel(excelManager, excelFileId, adminName, excelSourceFileName, destRootFolder, fixSheets);
+
+                        if (!isOk)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // minden ok?
+            if (isOk)
+            {
+                Framework.Logger(0, "ExcelHeaderValidator", "Info", "", "-", String.Format("{0} file-ból hibalista excel készítése sikeresen befejeződött.", excelSourceFileName));
+            }
+            else
+            {
+                //sqlString = String.Format("UPDATE ExcelFiles SET QStatusId={0}, QStatusTime=getdate() WHERE ExcelFileId={1}", (int)QStatusNum.CheckedFailed, excelFileId);
+                //sqlManager.ExecuteNonQuery(sqlString);
+                Framework.Logger(0, "ExcelHeaderValidator", "Err", "", "-", String.Format("{0} file-ból hibalista excel készítése sikertelen volt.", excelSourceFileName));
+            }
+
+            return isOk;
+ 
+        }
+
+        /// <summary>
+        /// Create Admin Error Excel
+        /// </summary>
+        /// <param name="sqlManager"></param>
+        /// <param name="excelFileId"></param>
+        /// <param name="excelManager"></param>
+        /// <param name="errorSheetNames"></param>
+        /// <param name="excelSourceFileName"></param>
+        /// <param name="destRootFolder"></param>
+        /// <param name="sysAdminName"></param>
+        /// <returns></returns>
+        private static bool CreateAdminErrorExcel(MSSQLManager sqlManager, int excelFileId, ExcelManager excelManager, List<string> errorSheetNames, string excelSourceFileName, string destRootFolder, string sysAdminName)
+        {
+            bool isOk = true;
+            List<string> fixSheets = new List<string>();
+
+            // hibás fejlécű munkalapok
+            string sqlQuery = "SELECT ExcelSheetName FROM ExcelSheets WHERE ExcelFileId={0} AND QStatusId={1}";
+            sqlQuery = String.Format(sqlQuery, excelFileId, (int)QStatusNum.CheckedFailed);
+            System.Data.DataTable dt = sqlManager.ExecuteQuery(sqlQuery);
+
+            // admin error excel kell?
+            bool needSysAdminExcel = (dt.Rows.Count > 0) || errorSheetNames.Any(x => x.Contains(sysAdminName));
+
+            if (needSysAdminExcel)
+            {
+                fixSheets = errorSheetNames.Where(x => x.Contains(sysAdminName)).ToList();
+
+                foreach (DataRow errorSheet in dt.Rows)
+                {
+                    fixSheets.Add(errorSheet["ExcelSheetName"].ToString());
+                }
+
+                isOk = CopySheetToNewExcel(excelManager, excelFileId, sysAdminName, excelSourceFileName, destRootFolder, fixSheets);
+            }
+
+            return isOk;    
+        }
+
         /// <summary>
         /// Copy Sheet To New Excel
         /// </summary>
@@ -54,7 +153,7 @@ namespace Merkit.BRC.RPA
         /// <param name="destRootFolder"></param>
         /// <param name="fixSheets"></param>
         /// <returns></returns>
-        public static bool CopySheetToNewExcel(ExcelManager excelManager,int excelFileId, string adminName, string excelSourceFileName, string destRootFolder, List<string> fixSheets)
+        public static bool CopySheetToNewExcel(ExcelManager excelManager, int excelFileId, string adminName, string excelSourceFileName, string destRootFolder, List<string> fixSheets)
         {
             // path and file names
             string excelFileNameWithoutExtension = Path.GetFileNameWithoutExtension(excelSourceFileName);
@@ -79,6 +178,18 @@ namespace Merkit.BRC.RPA
             return isOk;
         }
 
+        #endregion
+
+        #region MainProcess - Excels Validator
+
+        /// <summary>
+        /// Get Next Excel File
+        /// </summary>
+        /// <param name="sqlManager"></param>
+        /// <param name="inputDir"></param>
+        /// <param name="workDir"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         private static System.Data.DataTable GetNextExcelFile(MSSQLManager sqlManager, string inputDir, string workDir)
         {
             int excelFileId = 0;
@@ -479,5 +590,7 @@ namespace Merkit.BRC.RPA
 
             return result;
         }
+
+        #endregion
     }
 }
