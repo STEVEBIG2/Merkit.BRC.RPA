@@ -1,4 +1,4 @@
-﻿-- Use BRC_Hungary_Test
+﻿-- Use BRC_Hungary_Test 
 -- GO
 
 -- DROP TABLE ExcelRows
@@ -157,6 +157,7 @@ GO
 CREATE TABLE ExcelFiles (
 	ExcelFileId int IDENTITY(1,1) NOT NULL ,
 	ExcelFileName varchar(50) NOT NULL,
+	ErrorExcelsCreated bit NOT NULL,
 	QStatusId int NULL,
 	QStatusTime datetime NULL,
 	RobotName varchar(50) NULL,

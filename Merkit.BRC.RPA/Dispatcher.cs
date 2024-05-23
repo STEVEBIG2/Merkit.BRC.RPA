@@ -49,12 +49,54 @@ namespace Merkit.BRC.RPA
 
         #region Dispatcher - CreateErrorExcels
 
+        public static bool CreateErrorExcels()
+        {
+            bool isOk = true;
+            bool isConnected = false;
+            string sqlQuery = "";
+
+            string sysAdminName = Config.NotifyEmail;
+            string destRootFolder = @"c:\RPA\EmailAttachments";
+            MSSQLManager sqlManager = new MSSQLManager();
+
+            try
+            {
+                sqlManager.ConnectByConfig();
+                isConnected = true;
+                sqlQuery = "SELECT ExcelFileId, ExcelFileName FROM ExcelFiles ";
+                sqlQuery += "WHERE QStatusId IN({0}, {1}) AND ErrorExcelsCreated=0 ";
+                sqlQuery = String.Format(sqlQuery, (int)QStatusNum.CheckedOk, (int)QStatusNum.CheckedFailed);
+                System.Data.DataTable dtExcelFiles = sqlManager.ExecuteQuery(sqlQuery);
+
+                foreach (DataRow dr in dtExcelFiles.Rows)
+                {
+
+                }
+
+                // kész
+                sqlManager.Disconnect();
+                isConnected = false;
+            }
+            catch (Exception ex)
+            {
+                // Connected?
+                if (isConnected)
+                {
+                    sqlManager.Disconnect();
+                }
+
+                throw new Exception(ex.Message);
+            }
+
+            return isOk;
+        }
+
         /// <summary>
         /// Create Error Excels
         /// </summary>
         /// <param name="excelFileId"></param>
         /// <returns></returns>
-        public static bool CreateErrorExcels(MSSQLManager sqlManager, int excelFileId, string excelSourceFileName, string destRootFolder, string sysAdminName)
+        public static bool CreateErrorExcelsFromOneExcel(MSSQLManager sqlManager, int excelFileId, string excelSourceFileName, string destRootFolder, string sysAdminName)
         {
             ExcelManager excelManager = new ExcelManager();
             List<string> fixSheets = new List<string>();
@@ -66,16 +108,14 @@ namespace Merkit.BRC.RPA
             {
                 List<string> errorSheetNames = excelManager.WorksheetNames().Where(x => x.StartsWith("Error - ")).ToList();
                 excelManager.CloseExcelWithoutSave();
-                
+
                 // Admin hiba Excel
-                isOk = CreateAdminErrorExcel(sqlManager, excelFileId, excelManager, errorSheetNames, excelSourceFileName, destRootFolder, sysAdminName);
+                attachments = CreateAdminErrorExcel(sqlManager, excelFileId, excelManager, errorSheetNames, excelSourceFileName, destRootFolder, sysAdminName);
+                isOk = !String.IsNullOrEmpty(attachments);
 
                 // ha Admin hiba Excel ok, ügyintézői hiba excelek készítése
                 if (isOk)
                 {
-                    attachments = Path.Combine(destRootFolder, String.Format("{0}_{1}.xlsx", excelSourceFileName, sysAdminName));
-                    InsertEmailQueue(excelFileId, sysAdminName, "Robot futtatás - excel adat hibák", "Hibák mellékelve", attachments, sqlManager);
-                    
                     string adminName = "";
 
                     foreach (string errorSheetName in errorSheetNames.Where(x => !x.Contains(sysAdminName)).ToList())
@@ -83,14 +123,9 @@ namespace Merkit.BRC.RPA
                         fixSheets.Clear();
                         fixSheets.Add(errorSheetName);
                         adminName = errorSheetName.Replace("Error - ", "");
-                        isOk = CopySheetToNewExcel(excelManager, excelFileId, adminName, excelSourceFileName, destRootFolder, fixSheets);
+                        attachments = CopySheetToNewExcel(sqlManager,excelManager, excelFileId, adminName, excelSourceFileName, destRootFolder, fixSheets);
 
-                        if (isOk)
-                        {
-                            attachments = Path.Combine(destRootFolder, String.Format("{0}_{1}.xlsx", excelSourceFileName, sysAdminName));
-                            InsertEmailQueue(excelFileId, adminName, "Robot futtatás - excel adat hibák", "Hibák mellékelve", attachments, sqlManager);
-                        }
-                        else
+                        if (String.IsNullOrEmpty(attachments))
                         {
                             break;
                         }
@@ -101,12 +136,12 @@ namespace Merkit.BRC.RPA
             // minden ok?
             if (isOk)
             {
+                string sqlString = String.Format("UPDATE ExcelFiles SET ErrorExcelsCreated=1 WHERE ExcelFileId={0}", excelFileId);
+                sqlManager.ExecuteNonQuery(sqlString);
                 Framework.Logger(0, "ExcelHeaderValidator", "Info", "", "-", String.Format("{0} file-ból hibalista excel készítése sikeresen befejeződött.", excelSourceFileName));
             }
             else
             {
-                //sqlString = String.Format("UPDATE ExcelFiles SET QStatusId={0}, QStatusTime=getdate() WHERE ExcelFileId={1}", (int)QStatusNum.CheckedFailed, excelFileId);
-                //sqlManager.ExecuteNonQuery(sqlString);
                 Framework.Logger(0, "ExcelHeaderValidator", "Err", "", "-", String.Format("{0} file-ból hibalista excel készítése sikertelen volt.", excelSourceFileName));
             }
 
@@ -125,9 +160,9 @@ namespace Merkit.BRC.RPA
         /// <param name="destRootFolder"></param>
         /// <param name="sysAdminName"></param>
         /// <returns></returns>
-        private static bool CreateAdminErrorExcel(MSSQLManager sqlManager, int excelFileId, ExcelManager excelManager, List<string> errorSheetNames, string excelSourceFileName, string destRootFolder, string sysAdminName)
+        private static string CreateAdminErrorExcel(MSSQLManager sqlManager, int excelFileId, ExcelManager excelManager, List<string> errorSheetNames, string excelSourceFileName, string destRootFolder, string sysAdminName)
         {
-            bool isOk = true;
+            string excelDestFileName = "";
             List<string> fixSheets = new List<string>();
 
             // hibás fejlécű munkalapok
@@ -147,15 +182,16 @@ namespace Merkit.BRC.RPA
                     fixSheets.Add(errorSheet["ExcelSheetName"].ToString());
                 }
 
-                isOk = CopySheetToNewExcel(excelManager, excelFileId, sysAdminName, excelSourceFileName, destRootFolder, fixSheets);
+                excelDestFileName = CopySheetToNewExcel(sqlManager, excelManager, excelFileId, sysAdminName, excelSourceFileName, destRootFolder, fixSheets);
             }
 
-            return isOk;    
+            return excelDestFileName;    
         }
 
         /// <summary>
         /// Copy Sheet To New Excel
         /// </summary>
+        /// <param name="sqlManager"></param>
         /// <param name="excelManager"></param>
         /// <param name="excelFileId"></param>
         /// <param name="adminName"></param>
@@ -163,7 +199,7 @@ namespace Merkit.BRC.RPA
         /// <param name="destRootFolder"></param>
         /// <param name="fixSheets"></param>
         /// <returns></returns>
-        public static bool CopySheetToNewExcel(ExcelManager excelManager, int excelFileId, string adminName, string excelSourceFileName, string destRootFolder, List<string> fixSheets)
+        public static string CopySheetToNewExcel(MSSQLManager sqlManager, ExcelManager excelManager, int excelFileId, string adminName, string excelSourceFileName, string destRootFolder, List<string> fixSheets)
         {
             // path and file names
             string excelFileNameWithoutExtension = Path.GetFileNameWithoutExtension(excelSourceFileName);
@@ -175,17 +211,38 @@ namespace Merkit.BRC.RPA
             File.Copy(excelSourceFileName, excelDestFileName, true);
 
             // delete all sheet, where no need in new excel
-            bool isOk = excelManager.OpenExcel(excelDestFileName);
+            bool isOk = excelManager.OpenExcel(excelDestFileName);            
 
             if (isOk)
             {
-                List<string> list = excelManager.WorksheetNames().Where(x => !x.Contains("Referen") && !fixSheets.Contains(x)).ToList();
-                list.ForEach(x => excelManager.DeleteSheetIfExist(x));
-                excelManager.SelectFirstWorksheetByIndex();
-                excelManager.SaveAndCloseExcel();
+                SqlTransaction tr = sqlManager.BeginTransaction();
+
+                try
+                {
+                    List<string> list = excelManager.WorksheetNames().Where(x => !x.Contains("Referen") && !fixSheets.Contains(x)).ToList();
+                    list.ForEach(x => excelManager.DeleteSheetIfExist(x));
+                    excelManager.SelectFirstWorksheetByIndex();
+
+                    InsertEmailQueue(excelFileId, adminName, "Robot futtatás - excel adat hibák", "Hibák mellékelve", excelDestFileName, sqlManager, tr);
+                    excelManager.SaveAndCloseExcel();
+                    tr.Commit();
+                }
+                catch (Exception ex)
+                {
+                    excelManager.CloseExcelWithoutSave();
+                    tr.Rollback();
+
+                    excelDestFileName = "";
+                    throw new Exception(ex.Message);
+                }
+
+            }
+            else
+            {
+                excelDestFileName = "";
             }
 
-            return isOk;
+            return excelDestFileName;
         }
 
         /// <summary>

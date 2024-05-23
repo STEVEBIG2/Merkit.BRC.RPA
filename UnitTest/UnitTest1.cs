@@ -22,6 +22,7 @@ using UnitTest;
 using System.Data.SqlTypes;
 using Excel = Microsoft.Office.Interop.Excel;
 using System.Security.Cryptography;
+using System.Net.Mail;
 
 namespace UnitTestProject1
 {
@@ -47,9 +48,46 @@ namespace UnitTestProject1
             Config.MsSqlHost = @"STEVE-LAPTOP\SQLEXPRESS";
             Config.MsSqlDatabase = "BRC_Hungary_Test";
             Config.MsSqlUserName = "BRCHungaryUserTest";
-            Config.MsSqlPassword = "Qw52267660";  
+            Config.MsSqlPassword = "Qw52267660";             
         }
 
+
+        [TestMethod]
+        public void TestSmtpSendEmail()
+        {
+            bool isOk = true; 
+            //string str = new System.Net.NetworkCredential(String.Empty, "Valami").Password.ToString();
+
+            using (SmtpClient smtpClient = new SmtpClient())
+            {
+                var basicCredential = new NetworkCredential("username", "password");
+                using (MailMessage message = new MailMessage())
+                {
+                    MailAddress fromAddress = new MailAddress("from@yourdomain.com");
+
+                    smtpClient.Host = "mail.mydomain.com";
+                    smtpClient.UseDefaultCredentials = false;
+                    smtpClient.Credentials = basicCredential;
+
+                    message.From = fromAddress;
+                    message.Subject = "your subject";
+                    // Set IsBodyHtml to true means you can send HTML email.
+                    message.IsBodyHtml = true;
+                    message.Body = "<h1>your message body</h1>";
+                    message.To.Add("to@anydomain.com");
+
+                    try
+                    {
+                        smtpClient.Send(message);
+                    }
+                    catch (Exception ex)
+                    {
+                        isOk = false;
+                    }
+                }
+            }
+            Assert.IsTrue(isOk);
+        }
 
         [TestMethod]
         public void TestValidZip()
@@ -172,19 +210,33 @@ namespace UnitTestProject1
         [TestMethod]
         public void TestCopySheetsToNewExcel()
         {
+            InitConfig();
+            MSSQLManager sqlManager = new MSSQLManager();
+            sqlManager.ConnectByConfig();
+
             // params
             int excelFileId = 1;
             string adminName = "Admin"; // Error - rendszergazda@merkit.hu, Reference
             string excelSourceFileName = @"c:\RPA\Munka\Teszt_adatok_hibaval.xlsx";
             string destRootFolder = @"c:\RPA\EmailAttachments";
             List<string> fixSheets = new List<string>() { "Error - rendszergazda@merkit.hu" };
+            string newFile = Dispatcher.CopySheetToNewExcel(sqlManager, excelManager, excelFileId, adminName, excelSourceFileName, destRootFolder, fixSheets);
+            bool isOk = !String.IsNullOrEmpty(newFile);
 
-            bool isOk = Dispatcher.CopySheetToNewExcel(excelManager, excelFileId, adminName, excelSourceFileName, destRootFolder, fixSheets);
+            sqlManager.Disconnect();
             Assert.IsTrue(isOk);
         }
 
         [TestMethod]
         public void TestCreateErrorExcels()
+        {
+            InitConfig();
+            bool isOk = Dispatcher.CreateErrorExcels();
+            Assert.IsTrue(isOk);
+        }
+
+        [TestMethod]
+        public void TestCreateErrorExcelsFromOneExcel()
         {
             int excelFileId = 22;
             string excelSourceFileName = @"c:\RPA\Munka\Teszt_adatok_hibaval.xlsx";
@@ -195,7 +247,7 @@ namespace UnitTestProject1
             MSSQLManager sqlManager = new MSSQLManager();
             sqlManager.ConnectByConfig();
 
-            bool isOk = Dispatcher.CreateErrorExcels(sqlManager,excelFileId, excelSourceFileName, destRootFolder, sysAdminName);
+            bool isOk = Dispatcher.CreateErrorExcelsFromOneExcel(sqlManager,excelFileId, excelSourceFileName, destRootFolder, sysAdminName);
 
             sqlManager.Disconnect();
             Assert.IsTrue(isOk);
