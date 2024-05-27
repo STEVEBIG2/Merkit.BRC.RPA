@@ -49,14 +49,20 @@ namespace Merkit.BRC.RPA
 
         #region Dispatcher - CreateErrorExcels
 
-        public static bool CreateErrorExcels()
+        /// <summary>
+        /// Create Error Excels
+        /// </summary>
+        /// <param name="destRootFolder"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static bool CreateErrorExcels(string destRootFolder)
         {
             bool isOk = true;
             bool isConnected = false;
             string sqlQuery = "";
-
+            int excelFileId = 0;
+            string excelSourceFileName = "";
             string sysAdminName = Config.NotifyEmail;
-            string destRootFolder = @"c:\RPA\EmailAttachments";
             MSSQLManager sqlManager = new MSSQLManager();
 
             try
@@ -70,7 +76,9 @@ namespace Merkit.BRC.RPA
 
                 foreach (DataRow dr in dtExcelFiles.Rows)
                 {
-
+                    excelFileId = Convert.ToInt32(dr["ExcelFileId"]);
+                    excelSourceFileName = dr["ExcelFileName"].ToString();
+                    isOk = CreateErrorExcelsFromOneExcel(sqlManager, excelFileId, excelSourceFileName, destRootFolder, sysAdminName);
                 }
 
                 // kész

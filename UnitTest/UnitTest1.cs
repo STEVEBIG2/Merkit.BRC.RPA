@@ -231,7 +231,8 @@ namespace UnitTestProject1
         public void TestCreateErrorExcels()
         {
             InitConfig();
-            bool isOk = Dispatcher.CreateErrorExcels();
+            string destRootFolder = @"c:\RPA\EmailAttachments";
+            bool isOk = Dispatcher.CreateErrorExcels(destRootFolder);
             Assert.IsTrue(isOk);
         }
 
