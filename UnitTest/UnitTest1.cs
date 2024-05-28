@@ -48,7 +48,9 @@ namespace UnitTestProject1
             Config.MsSqlHost = @"STEVE-LAPTOP\SQLEXPRESS";
             Config.MsSqlDatabase = "BRC_Hungary_Test";
             Config.MsSqlUserName = "BRCHungaryUserTest";
-            Config.MsSqlPassword = "Qw52267660";             
+            Config.MsSqlPassword = "Qw52267660";   
+            
+            Config.EmailAttachmentsRootFolder = @"C:\RPA\EmailAttachments";
         }
 
 
@@ -231,8 +233,7 @@ namespace UnitTestProject1
         public void TestCreateErrorExcels()
         {
             InitConfig();
-            string destRootFolder = @"c:\RPA\EmailAttachments";
-            bool isOk = Dispatcher.CreateErrorExcels(destRootFolder);
+            bool isOk = Dispatcher.CreateErrorExcels(Config.EmailAttachmentsRootFolder);
             Assert.IsTrue(isOk);
         }
 
