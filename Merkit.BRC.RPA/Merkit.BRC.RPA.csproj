@@ -57,6 +57,7 @@
     <Compile Include="Framework\FileManager.cs" />
     <Compile Include="Framework\Framework.cs" />
     <Compile Include="Framework\MSSQLManager.cs" />
+    <Compile Include="Performer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

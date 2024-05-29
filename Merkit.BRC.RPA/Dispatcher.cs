@@ -231,7 +231,7 @@ namespace Merkit.BRC.RPA
                     list.ForEach(x => excelManager.DeleteSheetIfExist(x));
                     excelManager.SelectFirstWorksheetByIndex();
 
-                    InsertEmailQueue(excelFileId, adminName, "Robot futtatás - excel adat hibák", "Hibák mellékelve", excelDestFileName, sqlManager, tr);
+                    InsertEmailQueue(excelFileId, adminName, Config.ErrorExcelEmailSubject, Config.ErrorExcelEmailBody, excelDestFileName, sqlManager, tr);
                     excelManager.SaveAndCloseExcel();
                     tr.Commit();
                 }

@@ -51,6 +51,8 @@ namespace UnitTestProject1
             Config.MsSqlPassword = "Qw52267660";   
             
             Config.EmailAttachmentsRootFolder = @"C:\RPA\EmailAttachments";
+            Config.ErrorExcelEmailSubject = "BRC EnterHungary PAD robot futtatás - excel adat hibák";
+            Config.ErrorExcelEmailBody = "Hiba Excel mellékelve";
         }
 
 
