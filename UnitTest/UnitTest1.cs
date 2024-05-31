@@ -55,6 +55,15 @@ namespace UnitTestProject1
             Config.ErrorExcelEmailBody = "Hiba Excel mellékelve";
         }
 
+        [TestMethod]
+        public void TestCreateResultExcels()
+        {
+            bool isOk = true;
+            InitConfig();
+            isOk = Performer.CreateResultExcels("");
+            Assert.IsTrue(isOk);
+            return;
+        }
 
         [TestMethod]
         public void TestSmtpSendEmail()

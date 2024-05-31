@@ -1,6 +1,5 @@
 ﻿-- Use BRC_Hungary_Test 
 -- GO
-
 -- DROP TABLE ExcelRows
 -- GO
 -- DROP TABLE ExcelFiles
@@ -119,27 +118,27 @@ GO
 -- GO
 
 -- General statuses
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (-2, 'Deleted')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (-2, 'Törölt')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (-1, 'Locked')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (-1, 'Zárolt')
 GO
 -- DisPatcher statuses
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (0, 'New')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (0, 'Új')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (1, 'Checking In Progress')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (1, 'Ellenőrzés folyamatban')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (2, 'Checked - Ok')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (2, 'Ellenőrzés - Ok')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (3, 'Checked - Failed')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (3, 'Ellenőrzés - hibás')
 GO
 -- Performer statuses
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (11, 'Recording In Progress')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (11, 'Felvitel folyamatban')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (12, 'Recording - Ok')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (12, 'Felvitel - Ok')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (13, 'Recording - Failed')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (13, 'Felvitel - sikertelen')
 GO
-INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (14, 'Exported')
+INSERT INTO QStatuses (QStatusId, QStatusName) VALUES (14, 'Eredményfile elkészült')
 GO
 
 -- ** ExcelFiles, ExcelSheets, ExcelRows
@@ -612,6 +611,7 @@ SELECT
   r.ExcelFileId,
   r.ExcelSheetId,
   r.ExcelRowNum,
+  q.QStatusId,
   r.Ugyszam AS [Ügyszám],
   (SELECT Email FROM EnterHungaryLogins Where EnterHungaryLoginId = r.EnterHungaryLoginId) AS [Ügyintéző],
   CASE WHEN Beadhato=1 THEN 'Igen' ELSE 'Nem' END AS [Beadható-e],
@@ -707,8 +707,10 @@ SELECT
   r.Szallashely_bej_link AS [Szálláshely bejelentő lap],
   r.Postazasi_kerelem_link AS [Postázási kérelem],
   r.Vizumfelv_ny_link AS [Vízumfelvételi nyilatkozat],
-  r.Kolcs_szerz_link AS [Kölcsönzési szerződés]
+  r.Kolcs_szerz_link AS [Kölcsönzési szerződés],
+  q.QStatusName AS [Státusz]
 From ExcelRows r
+INNER JOIN QStatuses q ON (r.QStatusId=q.QStatusId)
 GO
 
 CREATE VIEW View_ExcelRows AS
@@ -717,6 +719,7 @@ CREATE VIEW View_ExcelRows AS
    r.ExcelFileId,
    r.ExcelSheetId,
    r.ExcelRowNum,
+   q.QStatusId,
    r.Ugyszam,
    (SELECT Email FROM EnterHungaryLogins Where EnterHungaryLoginId = r.EnterHungaryLoginId) AS [Ugyintezo_Email],
    r.Beadhato,
@@ -812,10 +815,11 @@ CREATE VIEW View_ExcelRows AS
    r.Szallashely_bej_link,
    r.Postazasi_kerelem_link,
    r.Vizumfelv_ny_link,
-   r.Kolcs_szerz_link
-   From ExcelRows r
+   r.Kolcs_szerz_link,
+   q.QStatusName
+From ExcelRows r
+INNER JOIN QStatuses q ON (r.QStatusId=q.QStatusId)
 GO
-
 -- 
 
 CREATE TABLE EmailQueue (

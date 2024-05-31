@@ -19,7 +19,7 @@ namespace Merkit.BRC.RPA
         /// <returns></returns>
         public static string VersionInfo()
         {
-            return "0.5.29";
+            return "0.5.31";
         }
 
         /// <summary>

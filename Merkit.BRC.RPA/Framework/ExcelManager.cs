@@ -501,6 +501,44 @@ namespace Merkit.RPA.PA.Framework
         }
 
         /// <summary>
+        /// DataTable To Worksheet
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <param name="oSheet"></param>
+        /// <param name="onlyHeader"></param>
+        public void DataTableToWorksheet(DataTable dt, Excel.Worksheet oSheet, bool onlyHeader = false)
+        {
+            int colRow = 1;
+            int colNum = 0;
+
+            // column headings
+            foreach (DataColumn dc in dt.Columns)
+            {
+                colNum++;
+                SetCellValue(colRow, colNum, dc.ColumnName);
+            }
+
+            // no only header?
+            if(!onlyHeader)
+            {
+                foreach (DataRow dr in dt.Rows)
+                {
+                    colRow++;
+
+                    for (var i = 0; i < dt.Columns.Count; i++)
+                    {
+                        colNum++;
+                        SetCellValue(colRow, i+1, dr[i]);
+                    }
+                }
+            }
+
+            AutoFit();
+
+            return;
+        }
+
+        /// <summary>
         /// Get Excel Column Names By DataTable
         /// </summary>
         /// <param name="dt"></param>

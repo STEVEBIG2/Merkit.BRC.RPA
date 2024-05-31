@@ -23,7 +23,10 @@ namespace Merkit.RPA.PA.Framework
         public static string LocalWorkFolder { get; set; }
         public static string EmailAttachmentsRootFolder { get; set; } 
         public static string ErrorExcelEmailSubject { get; set; }
-        public static string ErrorExcelEmailBody { get; set; }  
+        public static string ErrorExcelEmailBody { get; set; }
+        public static string ResultExcelEmailSubject { get; set; }
+        public static string ResultExcelEmailBody { get; set; }
+
         public static string MsSqlUserName { get; set; }
         public static string MsSqlPassword { get; set; }
 

@@ -22,26 +22,35 @@ namespace Merkit.BRC.RPA
             bool isOk = true;
             bool isConnected = false;
             string sqlQuery = "";
-            int excelFileId = 0;
-            string excelSourceFileName = "";
-            string sysAdminName = Config.NotifyEmail;
+            int excelFileId = 30;
+            string exceldestFileName = Path.Combine(@"c:\Munka", $"Munka0530_{excelFileId}.xlsx");
+            //string sysAdminName = Config.NotifyEmail;
             MSSQLManager sqlManager = new MSSQLManager();
+
+            List<string> viewColums = new List<string>();
+            viewColums.Add("[Státusz]");
+            viewColums.Add("[Ügyszám]");
+
+            foreach (ExcelCol excelCol in ExcelValidator.excelHeaders.Where(x => !String.IsNullOrEmpty(x.SQLColName)))
+            {
+                viewColums.Add($"[{excelCol.ExcelColName}]");
+            }
+
+            string sqlViewColumns = String.Join(",", viewColums);
 
             try
             {
                 sqlManager.ConnectByConfig();
                 isConnected = true;
-                sqlQuery = "SELECT ExcelFileId, ExcelFileName FROM ExcelFiles ";
-                sqlQuery += "WHERE QStatusId IN({0}, {1}) AND ErrorExcelsCreated=0 ";
-                sqlQuery = String.Format(sqlQuery, (int)QStatusNum.CheckedOk, (int)QStatusNum.CheckedFailed);
-                System.Data.DataTable dtExcelFiles = sqlManager.ExecuteQuery(sqlQuery);
+                sqlQuery = $"SELECT {sqlViewColumns} FROM View_ExcelRowsByExcelColNames WHERE ExcelFileId={excelFileId}";
+                sqlQuery += $" AND QStatusId IN ({(int)QStatusNum.RecordingOk},{(int)QStatusNum.RecordingFailed})";
+                //sqlQuery += String.Format(" AND QStatusId IN ({0},{1})", (int)QStatusNum.RecordingOk, (int)QStatusNum.RecordingFailed);
+                System.Data.DataTable dtExcelRows = sqlManager.ExecuteQuery(sqlQuery);
 
-                foreach (DataRow dr in dtExcelFiles.Rows)
-                {
-                    excelFileId = Convert.ToInt32(dr["ExcelFileId"]);
-                    excelSourceFileName = dr["ExcelFileName"].ToString();
-                    //isOk = CreateOneResultExcel(sqlManager, excelFileId, excelSourceFileName, destRootFolder, sysAdminName);
-                }
+                ExcelManager excelManager = new ExcelManager();
+                excelManager.CreateExcel(exceldestFileName, "Feldolgozási eredmények");
+                excelManager.DataTableToWorksheet(dtExcelRows, excelManager.ExcelSheet);
+                excelManager.SaveAndCloseExcel();
 
                 // kész
                 sqlManager.Disconnect();
