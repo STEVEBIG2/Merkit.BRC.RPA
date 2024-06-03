@@ -516,6 +516,7 @@ namespace Merkit.RPA.PA.Framework
             {
                 colNum++;
                 SetCellValue(colRow, colNum, dc.ColumnName);
+                SetCellColor(colRow, colNum, Color.Gray);
             }
 
             // no only header?

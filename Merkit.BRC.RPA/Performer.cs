@@ -5,52 +5,39 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Data.SqlTypes;
 
 namespace Merkit.BRC.RPA
 {
     public static class Performer
     {
-
         /// <summary>
         /// Create Result Excels
         /// </summary>
-        /// <param name="destRootFolder"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public static bool CreateResultExcels(string destRootFolder)
+        public static bool CreateResultExcels()
         {
             bool isOk = true;
             bool isConnected = false;
-            string sqlQuery = "";
-            int excelFileId = 30;
-            string exceldestFileName = Path.Combine(@"c:\Munka", $"Munka0530_{excelFileId}.xlsx");
-            //string sysAdminName = Config.NotifyEmail;
+            int excelFileId = 0;
+            string excelDestFileName = "";
             MSSQLManager sqlManager = new MSSQLManager();
-
-            List<string> viewColums = new List<string>();
-            viewColums.Add("[Státusz]");
-            viewColums.Add("[Ügyszám]");
-
-            foreach (ExcelCol excelCol in ExcelValidator.excelHeaders.Where(x => !String.IsNullOrEmpty(x.SQLColName)))
-            {
-                viewColums.Add($"[{excelCol.ExcelColName}]");
-            }
-
-            string sqlViewColumns = String.Join(",", viewColums);
+            string sqlViewSelect = CreateViewSelect();
 
             try
             {
                 sqlManager.ConnectByConfig();
                 isConnected = true;
-                sqlQuery = $"SELECT {sqlViewColumns} FROM View_ExcelRowsByExcelColNames WHERE ExcelFileId={excelFileId}";
-                sqlQuery += $" AND QStatusId IN ({(int)QStatusNum.RecordingOk},{(int)QStatusNum.RecordingFailed})";
-                //sqlQuery += String.Format(" AND QStatusId IN ({0},{1})", (int)QStatusNum.RecordingOk, (int)QStatusNum.RecordingFailed);
-                System.Data.DataTable dtExcelRows = sqlManager.ExecuteQuery(sqlQuery);
+                string sqlQuery = $"SELECT ExcelFileId, ExcelFileName FROM ExcelFiles WHERE QStatusId={(int)QStatusNum.RecordingOk}";
+                System.Data.DataTable dtExcels = sqlManager.ExecuteQuery(sqlQuery);
 
-                ExcelManager excelManager = new ExcelManager();
-                excelManager.CreateExcel(exceldestFileName, "Feldolgozási eredmények");
-                excelManager.DataTableToWorksheet(dtExcelRows, excelManager.ExcelSheet);
-                excelManager.SaveAndCloseExcel();
+                foreach (DataRow dr in dtExcels.Rows)
+                {
+                    excelFileId = Convert.ToInt32(dr["ExcelFileId"]);
+                    excelDestFileName = Path.Combine(Config.EmailAttachmentsRootFolder, excelFileId.ToString(), String.Format("{0}_log.xlsx",Path.GetFileNameWithoutExtension(dr["ExcelFileName"].ToString())));
+                    isOk = CreateOneResultExcel(sqlManager, sqlViewSelect, excelFileId, excelDestFileName);
+                }
 
                 // kész
                 sqlManager.Disconnect();
@@ -70,11 +57,77 @@ namespace Merkit.BRC.RPA
             return isOk;
         }
 
-        public static bool CreateOneResultExcel()
+        /// <summary>
+        /// Create One Result Excel
+        /// </summary>
+        /// <param name="sqlManager"></param>
+        /// <param name="sqlViewSelect"></param>
+        /// <param name="excelFileId"></param>
+        /// <param name="excelDestFileName"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static bool CreateOneResultExcel(MSSQLManager sqlManager, string sqlViewSelect, int excelFileId, string excelDestFileName)
         {
-            bool IsOk = false;
+            bool isOk = true;
+            bool isExcelOpen = false;
+            string sqlQuery = "";
+            string sqlString = "";
+            ExcelManager excelManager = new ExcelManager();
+            SqlTransaction tr = sqlManager.BeginTransaction();
 
-            return IsOk;    
+            try
+            {
+                // Read from SQL
+                sqlQuery = String.Format(sqlViewSelect, excelFileId);
+                System.Data.DataTable dtExcelRows = sqlManager.ExecuteQuery(sqlQuery, tr);
+
+                // Create result excel, change status, create e-mail
+                excelManager.CreateExcel(excelDestFileName, "Feldolgozási eredmények");
+                isExcelOpen = true;
+                excelManager.DataTableToWorksheet(dtExcelRows, excelManager.ExcelSheet);
+                sqlString = String.Format(String.Format("UPDATE ExcelFiles SET QStatusId={0}, QStatusTime=getdate() WHERE ExcelFileId={1}", (int)QStatusNum.Exported, excelFileId));
+                sqlManager.ExecuteNonQuery(sqlString, null, tr);
+                Dispatcher.InsertEmailQueue(excelFileId, Config.NotifyEmail, Config.ResultExcelEmailSubject, Config.ResultExcelEmailBody, excelDestFileName, sqlManager, tr);
+
+                // close excel, commit tran
+                excelManager.SaveAndCloseExcel();
+                isExcelOpen = false;
+                tr.Commit();
+            }
+            catch (Exception ex)
+            {
+                if (isExcelOpen)
+                {
+                    excelManager.CloseExcelWithoutSave();
+                }
+
+                tr.Rollback();
+                isOk = false;
+                throw new Exception(ex.Message);
+            }
+
+            return isOk;
+        }
+
+        /// <summary>
+        /// Create View_ExcelRowsByExcelColNames select command
+        /// </summary>
+        /// <returns></returns>
+        private static string CreateViewSelect()
+        {
+            List<string> viewColums = new List<string>();
+            viewColums.Add("[Státusz]");
+            viewColums.Add("[Ügyszám]");
+
+            foreach (ExcelCol excelCol in ExcelValidator.excelHeaders.Where(x => !String.IsNullOrEmpty(x.SQLColName)))
+            {
+                viewColums.Add($"[{excelCol.ExcelColName}]");
+            }
+
+            string sqlViewColumns = String.Join(",", viewColums);
+            string sqlViewQuery = "SELECT " + sqlViewColumns + " FROM View_ExcelRowsByExcelColNames WHERE ExcelFileId={0}";
+            sqlViewQuery += $" AND QStatusId IN ({(int)QStatusNum.RecordingOk},{(int)QStatusNum.RecordingFailed})";
+            return sqlViewQuery;
         }
     }
 }

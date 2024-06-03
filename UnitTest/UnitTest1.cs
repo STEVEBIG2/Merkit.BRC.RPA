@@ -21,6 +21,8 @@ using System.ComponentModel;
 using UnitTest;
 using System.Data.SqlTypes;
 using Excel = Microsoft.Office.Interop.Excel;
+using Word = Microsoft.Office.Interop.Word;
+using Outlook = Microsoft.Office.Interop.Outlook;
 using System.Security.Cryptography;
 using System.Net.Mail;
 
@@ -49,10 +51,12 @@ namespace UnitTestProject1
             Config.MsSqlDatabase = "BRC_Hungary_Test";
             Config.MsSqlUserName = "BRCHungaryUserTest";
             Config.MsSqlPassword = "Qw52267660";   
-            
+            //
             Config.EmailAttachmentsRootFolder = @"C:\RPA\EmailAttachments";
             Config.ErrorExcelEmailSubject = "BRC EnterHungary PAD robot futtatás - excel adat hibák";
             Config.ErrorExcelEmailBody = "Hiba Excel mellékelve";
+            Config.ResultExcelEmailSubject = "BRC EnterHungary PAD robot futtatás - eredmény excel";
+            Config.ResultExcelEmailBody = "Eredmény Excel mellékelve";
         }
 
         [TestMethod]
@@ -60,7 +64,7 @@ namespace UnitTestProject1
         {
             bool isOk = true;
             InitConfig();
-            isOk = Performer.CreateResultExcels("");
+            isOk = Performer.CreateResultExcels();
             Assert.IsTrue(isOk);
             return;
         }
